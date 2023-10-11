@@ -13,3 +13,13 @@ selenium-debug.log
 *.ntvs*
 *.njsproj
 *.sln
+
+*.pyc
+
+/web/dist
+/web/node_modules
+/web/package-lock.json
+/web/yarn.lock
+
+/proxy/dist
+/proxy/node_modules

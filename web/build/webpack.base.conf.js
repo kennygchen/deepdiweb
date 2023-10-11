@@ -2,6 +2,7 @@
 const path = require('path')
 const utils = require('./utils')
 const config = require('../config')
+const webpack = require('webpack')
 const vueLoaderConfig = require('./vue-loader.conf')
 const { VueLoaderPlugin } = require('vue-loader')
 const ESLintPlugin = require('eslint-webpack-plugin')
@@ -74,7 +75,11 @@ module.exports = {
   },
   plugins: [
     ...(config.dev.useEslint ? [new ESLintPlugin({})] : []),
-    new VueLoaderPlugin()
+    new VueLoaderPlugin(),
+    new webpack.ProvidePlugin({
+      $:'jquery',
+      jQuery:'jquery'
+    })
   ],
   mode: 'development',
 }

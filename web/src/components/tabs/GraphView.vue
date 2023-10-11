@@ -203,6 +203,7 @@
     props: ['visible'],
     watch: {
       visible(newValue) {
+        console.log(newValue)
         this.redraw()
       },
       selectedAddress(newAddress, oldAddress) {

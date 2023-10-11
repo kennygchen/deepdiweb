@@ -1,9 +1,6 @@
 <template>
   <div>
-    <div
-      v-if="loading"
-      class="loading"
-    >
+    <div v-if="loading" class="loading">
       <Loading />
     </div>
 
@@ -11,21 +8,18 @@
       <NotFound />
     </div>
 
-    <div
-      v-if="!loading && !notFound"
-      class="disassembler"
-    >
+    <div v-if="!loading && !notFound" class="disassembler">
       <MenuBar />
       <div style="position:absolute; top:60px; left: 20px; right: 20px; height: 20px;">
         <AddressBar />
       </div>
       <div
-        style="border-top: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0; position: absolute; top: 120px; right: 0px; bottom: 20px; left: 0px; "
-      >
+        style="border-top: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0; position: absolute; top: 120px; right: 0px; bottom: 20px; left: 0px; ">
         <SplitBox split-x="400">
           <div slot="left">
+            <!-- liveMode is the state variable, its value is obtained from backend app, depend on the odafile it loads-->
             <div v-if="liveMode">
-              <LiveEntry />
+              <FileSideBar2 v-if="liveMode" :currentDiffItem="selectedDiffItem" />
             </div>
             <div v-else>
               <FileSidebar />
@@ -55,16 +49,10 @@
               </b-tabs>
             </b-card>  -->
 
-            <b-tabs
-              v-model="tabIndex"
-              style="margin-left:5px;"
-              @input="onInput"
-            >
-              <b-tab
-                title="Disassembly"
-                active
-              >
+            <b-tabs v-model="tabIndex" style="margin-left:5px;" @input="onInput">
+              <b-tab title="Disassembly" active>
                 <div style="position:absolute; left:0;right:0;top:45px;bottom:0;">
+                  <!-- Listing.vue show the disassembly information under Disassembly section -->
                   <Listing />
                 </div>
               </b-tab>
@@ -87,15 +75,36 @@
                 </div>
               </b-tab>
               <KeepAlive>
-              <b-tab title="Call Graph">
-                <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
-                  <div v-if="visitedTabs.includes(5)">
-                    <CallGraph/>
+                <b-tab title="Call Graph">
+                  <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
+                    <div v-if="visitedTabs.includes(5)">
+                      <CallGraph />
+                    </div>
                   </div>
+                </b-tab>
+              </KeepAlive>
+              <!-- KeepAlive a built-in component that allows us to conditionally cache component instances
+                   when dynamically switching between multiple components.-->
+              <b-tab title="Code Diff">
+                <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
+                  <!--                    <CodeDiff />-->
+                  <CodeDiff :diffItem="selectedDiffItem" />
                 </div>
               </b-tab>
               </KeepAlive>
-              
+              <b-tab title="Diff History">
+                <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
+                  <DiffHistory @show-diff="handleShowDiff" />
+                </div>
+              </b-tab>
+              <b-tab title="Call Force Graph">
+                <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
+                  <div v-if="visitedTabs.includes(8)">
+                    <CallForceGraph />
+                  </div>
+                </div>
+              </b-tab>
+
             </b-tabs>
 
             <!-- <SplitBox splitX="600">
@@ -112,6 +121,10 @@
             <Decompiler />
           </div> -->
         </SplitBox>
+        <!--        <div class="diff-container">-->
+        <!--          <DiffHistory @show-diff="handleShowDiff" />-->
+        <!--          <CodeDiff :diffItem="selectedDiffItem" />-->
+        <!--        </div>-->
       </div>
       <StatusBar />
     </div>
@@ -132,12 +145,12 @@ import Loading from './Loading'
 import EditFunctionModal from './modals/EditFunctionModal'
 import DefinedDataModal from './modals/DefinedDataModal'
 import NotFound from './NotFound'
-
 import * as types from '@/store/mutation-types.js'
 
 import { mapState } from 'vuex'
 import { copyOdaMaster, canEdit } from '../api/oda'
 import { OPEN_LISTING_TAB, bus } from '../bus'
+// import DiffHistory from './DiffHistory'
 
 
 export default {
@@ -159,6 +172,10 @@ export default {
     SharingModal: () => import('@/components/modals/SharingModal'),
     StatusBar: () => import('./StatusBar'),
     CommentModal: () => import('@/components/modals/CommentModal'),
+    FileSideBar2: () => import('@/components/FileSideBar2'),
+    CodeDiff: () => import('@/components/tabs/CodeDiff'),
+    DiffHistory: () => import('@/components/tabs/DiffHistory'),
+    CallForceGraph: () => import('@/components/tabs/CallForceGraph'),
     // Decompiler,
     Loading,
     GotoAddressModal,
@@ -166,13 +183,14 @@ export default {
     DefinedDataModal,
     NotFound
   },
-  data () {
+  data() {
     return {
       notFound: null,
       loading: true,
       tabIndex: 0,
       graphVisible: false,
-      visitedTabs: []
+      visitedTabs: [],
+      selectedDiffItem: null
     }
   },
   computed: mapState([
@@ -181,11 +199,11 @@ export default {
   watch: {
     // call again the method if the route changes
     $route: 'fetchData',
-    tabIndex () {
+    tabIndex() {
       this.graphVisible = (this.tabIndex === 1)
     }
   },
-  created () {
+  created() {
     // fetch the data when the view is created and the data is
     // already being observed
     this.fetchData()
@@ -194,14 +212,15 @@ export default {
   },
   methods: {
     onInput(value) {
-        if(!this.visitedTabs.includes(value)){
-          this.visitedTabs.push(value)
-        }
-      },
-    async fetchData () {
+      if (!this.visitedTabs.includes(value)) {
+        this.visitedTabs.push(value)
+      }
+    },
+    async fetchData() {
       this.loading = true
       const shortName = this.$route.params.shortName
       let own = null
+      let function_list = null
       try {
         own = await canEdit(shortName)
       } catch (e) {
@@ -209,9 +228,11 @@ export default {
         this.notFound = true
         return
       }
+      console.log('own: ' + own)
 
       if (!own) {
         try {
+          console.log('calling copyOdaMaster')
           const { short_name: copiedShortName, binary_bytes: binaryBytes } = await copyOdaMaster(shortName)
           this.$store.commit(types.LOAD_BINARY, { binaryBytes })
           this.$router.replace('/odaweb/' + copiedShortName)
@@ -223,9 +244,16 @@ export default {
       }
 
       this.$store.commit(types.SET_SHORTNAME, { shortName: shortName })
+      console.log("disassembler - shortName: " + this.$store.getters.getShortName())
       await this.$store.dispatch('loadOdbFile')
       this.loading = false
       this.notFound = false
+    },
+    handleShowDiff(item) {
+      this.selectedDiffItem = item;
+      // console.log("disassembler - item: ", item)
+      console.log("disassembler - item: " + JSON.stringify(item, null, 2));
+
     }
   }
 }
@@ -233,22 +261,22 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  ::v-deep .nav-link {
-    padding: 3px 18px;
-    font-size: 14px;
-  }
+::v-deep .nav-link {
+  padding: 3px 18px;
+  font-size: 14px;
+}
 
-  ::v-deep .nav-tabs {
-    padding-top: 2px;
-    padding-left: 6px;
-  }
+::v-deep .nav-tabs {
+  padding-top: 2px;
+  padding-left: 6px;
+}
 
-  ::v-deep .nav-item a {
-    color: #b5b5b5;
-    font-size: 1rem;
-  }
+::v-deep .nav-item a {
+  color: #b5b5b5;
+  font-size: 1rem;
+}
 
-  ::v-deep .card-header {
-    padding: 0.15rem 1.25rem 0.75rem 1.25rem;
-  }
+::v-deep .card-header {
+  padding: 0.15rem 1.25rem 0.75rem 1.25rem;
+}
 </style>

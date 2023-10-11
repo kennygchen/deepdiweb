@@ -124,9 +124,9 @@
 </template>
 
 <script>
-import { bus, SHOW_FILE_UPLOAD_MODAL } from '../../bus'
+import { bus, SHOW_FILE_UPLOAD_MODAL, SHOW_CONFIGURE_FILE_MODAL,TEST } from '../../bus'
 import { uploadFile } from '../../api/oda'
-import { LOAD_BINARY } from '../../store/mutation-types'
+import { LOAD_BINARY,SET_CODE_DIFF_FILE } from '../../store/mutation-types'
 
 function parseFilename (fullPath) {
   if (fullPath.indexOf('/') > -1) {
@@ -144,9 +144,9 @@ export default {
       projectName: null,
       defaultSharingMode: 'read',
       loading: false,
-
       arch: 'detect',
-      modes: []
+      modes: [],
+      codeDiff_file_index: null
     }
   },
   computed: {
@@ -155,11 +155,14 @@ export default {
     },
     isActiveUser () {
       return this.$store.getters.isActiveUser
-    }
+    },
   },
+
+  
   created () {
     const self = this
-    bus.$on(SHOW_FILE_UPLOAD_MODAL, function () {
+    bus.$on(SHOW_FILE_UPLOAD_MODAL, function (num) {
+      self.codeDiff_file_index = num
       self.file = null
       self.loading = false
       self.projectName = null
@@ -181,12 +184,25 @@ export default {
         filedata: this.file,
         projectName: this.projectName,
         arch: this.arch,
-        mode: this.mode
+        mode: this.mode,
+        jobs: this.$store.state.uploadFileSwitch,
+        fileOrder: this.codeDiff_file_index
       })
+
       this.$refs.fileUploadModal.hide()
-      // bus.$emit(SHOW_CONFIGURE_FILE_MODAL, { fileInfo })
-      this.$store.commit(LOAD_BINARY, { binaryBytes: new Uint8Array(await this.file.arrayBuffer()) })
-      this.$router.push({ path: `/odaweb/${shortName}` })
+      //bus.$emit(SHOW_CONFIGURE_FILE_MODAL, { fileInfo })
+      // this.$store.commit(LOAD_BINARY, { binaryBytes: new Uint8Array(await this.file.arrayBuffer()) })
+      // this.$router.push({ path: `/odaweb/${shortName}` })
+
+      console.log('this.$store.state.uploadFileSwitch ' + this.$store.state.uploadFileSwitch)
+      if(this.$store.state.uploadFileSwitch === 1) {
+        //bus.$emit(SHOW_CONFIGURE_FILE_MODAL, { fileInfo })
+        console.log(`UploadFileModal: set binaryBytes and redirect to /odaweb/${shortName}`)
+        this.$store.commit(LOAD_BINARY, { binaryBytes: new Uint8Array(await this.file.arrayBuffer()) })
+        this.$router.push({ path: `/odaweb/${shortName}` })
+      }else{
+        this.$store.commit(SET_CODE_DIFF_FILE,{ index: this.codeDiff_file_index, fileName: this.projectName })
+      }
     },
     archChanged (e) {
       switch (e.target.value) {

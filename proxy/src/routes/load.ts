@@ -4,6 +4,7 @@ import { get_project } from '../database';
 import { Request, Response } from 'express';
 import { read_until, spawn_and_read } from '../util';
 
+
 export default async function load(req: Request, res: Response) {
     const short_name = req.query.short_name as string;
     if (!short_name) {
@@ -20,6 +21,7 @@ export default async function load(req: Request, res: Response) {
     let binary_bytes;
     try {
         binary_bytes = await fs.readFile(project.file_path);
+        console.log(`Loaded binary_bytes for ${short_name}`);
     }
     catch (ex) {
         res.status(400).send(`${short_name} does not exist (it could have expired)`);
@@ -27,6 +29,7 @@ export default async function load(req: Request, res: Response) {
     }
 
     try {
+        
         const info: Info = {
             project_name: project.project_name,
             binary: {
@@ -124,7 +127,7 @@ export default async function load(req: Request, res: Response) {
                 });
             }
         }
-
+        console.log('sending info')
         res.status(200).json(
             info
         );
@@ -170,7 +173,10 @@ async function nm(file_path: string): Promise<{ symbols: BinarySymbol[], functio
             });
         }
     }
-
+    console.log('------------------nm---------------------')
+    console.log(symbols)
+    console.log(functions)
+    console.log('------------------nm---------------------')
     return { symbols, functions };
 }
 

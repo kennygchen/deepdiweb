@@ -147,6 +147,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import { UPLOADFILESWITCH } from '../store/mutation-types'
 import {
   bus,
   SHOW_FILE_UPLOAD_MODAL,
@@ -171,6 +172,7 @@ export default {
       window.location = '/odaweb/_download?short_name=' + this.shortName + '&revision=' + this.revision
     },
     uploadFile () {
+      this.$store.commit(UPLOADFILESWITCH,{ num: 1 })
       bus.$emit(SHOW_FILE_UPLOAD_MODAL)
     },
     showDecompiler () {

@@ -21,21 +21,23 @@ import { buildDUs, buildParcels } from '../lib/lib'
 
 export async function loadOdbFile ({ commit, state }) {
   const odbFile = await api.loadOdbFile()
-
+  console.log('loadOdbFile', odbFile)
   bus.$emit(NOTIFY, {
     text: 'Disassembling...'
   })
   let disassemblyTask
   if (odbFile.live_mode) {
+    console.log('disassembleBytes')
     disassemblyTask = api.disassembleBytes({
       bytes: odbFile.binary.text,
       arch: odbFile.binary.options.architecture,
       mode: odbFile.binary.options.endian
     })
   } else {
+    console.log('disassemble')
     disassemblyTask = api.disassemble(state.shortName)
   }
-
+  console.log('disassemblyTask', disassemblyTask)
   // we can do some local parsing while we wait for disassembly to finish
   // find strings (any contiguous sequence of more than 4 ascii characters)
   const strings = []
@@ -92,11 +94,13 @@ export async function loadOdbFile ({ commit, state }) {
   commit(types.SET_BRANCHES, {
     branches: odbFile.branches
   })
-
+  console.log('----------------------action.js/loadOdbFile---------------------')
+  console.log(odbFile)
+  console.log(allDus)
+  console.log(vmaToLda)
   // if (realtime) {
   //   realtime.close()
   // }
-
   // realtime = new Realtime('http://localhost:8080')
 }
 

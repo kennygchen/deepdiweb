@@ -16,20 +16,30 @@ export default async function disassemble(req: Request, res: Response) {
         return;
     }
 
+    console.log('disassembling', project)
+    project.raw = true;
+
     try {
-        // const form = new FormData();
-        // const bytes = await fs.readFile(project.file_path);
-        //
-        // if (project.raw) {
-        //     const byte_string = [...bytes].map(x => x.toString(16)).join(' ');
-        //
-        //     form.append('bytes', byte_string);
-        //     form.append('arch', project.arch);
-        //     form.append('mode', project.mode);
-        // } else {
-        //     form.append('file', bytes, 'filename');
-        // }
-        //
+        const form = new FormData();
+        const bytes = await fs.readFile(project.file_path);
+        console.log('bytes', bytes)
+        if (project.raw) {
+            const byte_string = [...bytes].map(x => x.toString(16)).join(' ');
+            // const byte_string = [...bytes].map(x => {
+            //     console.log('Byte value:', x);
+            //     const hex = x.toString(16).padStart(2,'0');
+            //     console.log('Hex value:', hex);
+            //     return hex;
+            // }).join(' ');
+        
+            form.append('bytes', byte_string);
+            form.append('arch', project.arch ?? '');
+            form.append('mode', project.mode ?? '');
+        } else {
+            const blob = new Blob([bytes]);
+            form.append('file', blob, 'filename');
+        }
+        
         // const resp = await axios.post(DEEPDI_URL,
         //     form.getBuffer(),
         //     {

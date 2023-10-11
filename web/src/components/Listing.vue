@@ -201,6 +201,7 @@ export default {
 
       const duss = this.$store.getters.dusByRange(this.topInstLogicalDuNum, this.numLinesShown)
       const listOfRenderedDus = duss.map((du) => this.renderDu(du))
+  
 
       // const a = performance.now()
       // const listOfRenderedDus = this.$store.getters.renderDusInRange(this.topInstLogicalDuNum, this.numLinesShown, this.renderDu)

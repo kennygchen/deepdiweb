@@ -19,9 +19,10 @@ export const SHOW_FUNCTION_MODAL = 'show.function.modal'
 export const SHOW_GOTOADDRESS_MODAL = 'show.gotoaddress.modal'
 export const SHOW_FINDBYTES_PANEL = 'show.findbytes.panel'
 export const SHOW_SYMBOLS_PANEL = 'show.symbols.panel'
+export const SHOW_RAWVIEWFORM_PANEL = 'show.rawviewform.panel' // Rawview里第二个标签表格的常量
 export const SHOW_STRINGS_PANEL = 'show.strings.panel'
 export const OPEN_LISTING_TAB = 'open.listing.tab'
-
+export const SHOW_RAWMODE_PANEL = 'show.rawmode.panel' // RawView里第一个标签的常量
 export const MODAL_HIDDEN = 'modal.hidden'
 
 export const API_ERROR = 'api.error'

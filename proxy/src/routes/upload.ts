@@ -9,12 +9,14 @@ import { add_project, delete_project } from '../database';
 export default async function upload(req: Request, res: Response) {
     try {
         const { project_name, arch, mode } = req.body;
+        console.log('uploading')
+        console.log(req.body)
         const file = req.files?.filedata as UploadedFile;
         if (!file) {
             res.status(400).send('no file provided');
             return;
         }
-
+        console.log(file)
         // create a short_name for the file, and rename the uploaded file to it
         const short_name = generate_id();
         const file_path = `${UPLOAD_DIR}/${short_name}`;
@@ -22,7 +24,6 @@ export default async function upload(req: Request, res: Response) {
         add_project(short_name, {
             project_name: file.name || project_name || short_name,
             file_path,
-
             raw: arch !== 'detect',
             arch,
             mode
@@ -39,6 +40,7 @@ export default async function upload(req: Request, res: Response) {
     }
 
 }
+
 
 async function clear_cache_if_over() {
     const files = await fs.readdir(UPLOAD_DIR);

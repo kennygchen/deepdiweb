@@ -10,6 +10,7 @@ const CHUNK_SIZE = 1000
 Vue.use(Vuex)
 
 export default new Vuex.Store({
+  // initializing state variables
   state: {
     binaryBytes: undefined,
 
@@ -23,6 +24,11 @@ export default new Vuex.Store({
 
     projectName: null,
     shortName: null,
+    shortName2: null,
+    codeDiffFiles: [],
+    codeDiffResult: null,
+    code_diff_function_list: [],
+    code_diff_loading: false,
 
     branches: null,
     branchesByAddr: null,
@@ -30,6 +36,8 @@ export default new Vuex.Store({
     structTypes: null,
 
     binary: null,
+
+    uploadFileSwitch: 1,
     revision: 0,
     sections: [],
     parcels: [],
@@ -54,6 +62,7 @@ export default new Vuex.Store({
     //
     vmaToLda: {}
   },
+  // modify states' value
   mutations: {
     [types.LOAD_ODBFILE] (state, { odbFile, allDus, vmaToLda }) {
       state.displayUnits.splice(0)
@@ -87,7 +96,7 @@ export default new Vuex.Store({
       state.strings = odbFile.strings
       state.functions = odbFile.functions
       state.comments = odbFile.comments
-      state.liveMode = odbFile.live_mode
+      state.liveMode = true // odbFile.live_mode // set to true for testing
       state.binaryOptions = state.binary.options
       state.binaryText = state.binary.text
 
@@ -101,11 +110,31 @@ export default new Vuex.Store({
       //   Vue.set(state.displayUnits, i, du)
       // })
     },
-
+    // 保存第一个文件名字
     [types.SET_SHORTNAME] (state, { shortName }) {
       state.shortName = shortName
     },
-
+    // 保存第二个文件名字
+    [types.SET_SHORTNAME2] (state, { shortName2 }) {
+      state.shortName2 = shortName2
+    },
+    [types.SET_CODE_DIFF_FILE] (state, { index, fileName }) {
+      // vue cannot detect array element change if using index way must use splice method to change an element at the index
+      state.codeDiffFiles.splice(index, 1, fileName)
+    },
+    [types.SET_CODE_DIFF_LOADING] (state, { loadingState }) {
+      state.code_diff_loading = loadingState
+      console.log(`set to ${loadingState}`)
+    },
+    [types.UPLOADFILESWITCH] (state, { num }) {
+      state.uploadFileSwitch = num
+    },
+    [types.SET_CODEDIFFRESULT] (state, { result }) {
+      state.codeDiffResult = result
+    },
+    [types.SET_CODE_DIFF_FUNCTION_LIST] (state, { list }) {
+      state.code_diff_function_list = list
+    },
     [types.LOAD_BINARY] (state, { binaryBytes, raw }) {
       // this can be loaded before odbfile, so we save this to attach to odbfile later
       state.binaryBytes = binaryBytes
@@ -240,7 +269,18 @@ export default new Vuex.Store({
     }
   },
   actions: actions,
+
+  // return states
   getters: {
+    getShortName: (state) => () => {
+      return state.shortName
+    },
+    getShortName2: (state) => () => {
+      return state.shortName2
+    },
+    getUploadFileState: (state) => {
+      return state.uploadFileSwitch
+    },
     binaryBytes: (state) => () => {
       return state.binaryBytes
     },
