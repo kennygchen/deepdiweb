@@ -98,7 +98,7 @@
                 </div>
               </b-tab>
               <b-tab title="Call Force Graph">
-                <div style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
+                <div id="forceGraph" style="position:absolute; top:32px; left:0; right:0; bottom:0; overflow: scroll;">
                   <div v-if="visitedTabs.includes(8)">
                     <CallForceGraph />
                   </div>
