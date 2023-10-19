@@ -64,62 +64,64 @@ export default {
         .nodeRelSize(NODE_R)
         .nodeAutoColorBy(node => node.attributes.modularity_class)
         .nodeThreeObject(node => node === hoverNode && node.attributes.MemoryObject !== "null"
-          ? new THREE.Mesh(
+          ? new THREE.Mesh(         // Memory object on hover
             new THREE.BoxGeometry(15, 15, 15),
             new THREE.MeshLambertMaterial({
               color: node.color,
-              transparent: false,
+              transparent: true,
               // opacity: 0.75,
-              emissive: "#ababab",
+              emissive: "#555555",
             })
           )
           : highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
-            ? new THREE.Mesh(
+            ? new THREE.Mesh(       // Memory object neighbors
               new THREE.BoxGeometry(15, 15, 15),
               new THREE.MeshLambertMaterial({
                 color: node.color,
-                transparent: false,
+                transparent: true,
                 // opacity: 0.75,
-                emissive: "#ababab",
+                emissive: "#555555",
               })
             )
             : node === hoverNode
-              ? new THREE.Mesh(
+              ? new THREE.Mesh(     // node on hover
                 new THREE.SphereGeometry(6, 8, 8),
                 new THREE.MeshLambertMaterial({
                   color: node.color,
-                  transparent: false,
+                  transparent: true,
                   // opacity: 0.75,
-                  emissive: "#ababab",
+                  emissive: "#555555",
                 })
               )
+              // ? console.log(node)
               : node.attributes.MemoryObject !== "null"
-                ? new THREE.Mesh(
+                ? new THREE.Mesh(     // Memory object
                   new THREE.BoxGeometry(15, 15, 15),
                   new THREE.MeshLambertMaterial({
                     color: node.color,
                     transparent: true,
-                    opacity: 0.75,
-                    emissive: "#a1a1a1",
+                    // opacity: 0.75,
+                    // emissive: "#a1a1a1",
                   })
                 )
                 : highlightNodes.has(node)
-                  ? new THREE.Mesh(
+                  ? new THREE.Mesh(     // node neighbors
                     new THREE.SphereGeometry(6, 8, 8),
                     new THREE.MeshLambertMaterial({
                       color: node.color,
-                      transparent: false,
+                      transparent: true,
                       // opacity: 0.75,
-                      emissive: "#ababab",
+                      emissive: "#555555",
                     })
                   )
+                  // ? console.log(node)
                   : false
         )
         .linkSource("source")
         .linkTarget("target")
-        .linkColor(link => link.source.color)
         .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
         .linkDirectionalParticleWidth(2)
+        .linkDirectionalParticleSpeed(0.005)
         .linkWidth(link => highlightLinks.has(link) ? 4 : 1.5)
         .onNodeHover(node => {
           // no state change
@@ -150,10 +152,11 @@ export default {
         });
     },
     rerenderGraph() {
-      console.log("rerender")
-      this.graph
-        .linkWidth(this.graph.linkWidth())
-        .linkDirectionalParticles(this.graph.linkDirectionalParticles());
+      console.log("rerender") +
+        this.graph
+          .linkWidth(this.graph.linkWidth())
+          .linkDirectionalParticles(this.graph.linkDirectionalParticles())
+          .nodeThreeObject(this.graph.nodeThreeObject());
     },
   }
 }
