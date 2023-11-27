@@ -6,14 +6,14 @@ import { generate_id } from './util';
 import load from './routes/load';
 import path from 'path';
 import upload from './routes/upload';
-import { readFunctions, getCodeDiffResult, readScript, runSigmaDiff, codeDiffUpload, getJsonContent } from './routes/codediff';
+import { readFunctions, getCodeDiffResult, readScript, runSigmaDiff, codeDiffUpload, getJsonContent, getJsonFromBinary } from './routes/codediff';
 import { EXAMPLES, EXAMPLE_NAMES } from '../dist/examples';
 import disassemble, { disassemble_bytes } from './routes/disassemble';
 
 /*
 Request Controller
  accept requests from front-end app
-*/ 
+*/
 
 const router = Router();
 
@@ -23,13 +23,14 @@ router.get('/:short_name', async (req, res) => {
 
 
 router.post('/api/_upload', upload);
-router.post('/api/getCodeDiffResult',getCodeDiffResult);
-router.post('/api/runSigmaDiff',runSigmaDiff);
-router.post('/api/codeDiffUpload',codeDiffUpload);
+router.post('/api/getCodeDiffResult', getCodeDiffResult);
+router.post('/api/runSigmaDiff', runSigmaDiff);
+router.post('/api/codeDiffUpload', codeDiffUpload);
 
-router.get('/api/getScript',readScript);
-router.get('/api/getJsonContent',getJsonContent);
-router.get('/api/getFunctionList',readFunctions);                       
+router.get('/api/getScript', readScript);
+router.get('/api/getJsonContent', getJsonContent);
+router.get('/api/getFunctionList', readFunctions);
+router.get('/api/getJsonFromBinary', getJsonFromBinary);
 router.get('/api/masters/:short_name/can_edit', (req, res) => {
     console.log('[router:can_edit]');
     // since we don't support auth, just return whether or not it is an example
@@ -39,7 +40,7 @@ router.get('/api/masters/:short_name/can_edit', (req, res) => {
         if 'test' not in EXAMPLE_NAMES send true
         else send false
     */
-    
+
     res.send(EXAMPLE_NAMES.indexOf(short_name) === -1);
 });
 

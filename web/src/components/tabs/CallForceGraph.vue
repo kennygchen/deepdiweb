@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="forceGraphHolder" id="forceGraphHolder"></div>
-    <OverlayInfo class="overlay-container" :clickedObject="this.clickedObject" />
+    <OverlayInfo class="overlay-container" :clickedNode="this.clickedNode" :clickedLink="this.clickedLink" />
   </div>
 </template>
 
@@ -10,6 +10,7 @@ import ForceGraph3D from '3d-force-graph';
 import gdot from "./gdot.json";
 import * as THREE from "three";
 import OverlayInfo from './OverlayInfo.vue';
+import { getJsonFromBinary } from '../../api/oda'
 
 export default {
   name: 'CallForceGrpah',
@@ -18,17 +19,29 @@ export default {
   },
   data() {
     return {
+      output: "",
       graph: null,
-      clickedObject: {
-        link: null,
-        node: null
-      }
+      clickedNode: "Hello",
+      clickedLink: null,
     }
   },
   mounted() {
     this.initializeGraph();
   },
+  beforeUpdate() {
+    console.log('beforeUpdate')
+  },
+  updated() {
+    console.log('update')
+  },
   methods: {
+    async getJson() {
+      try {
+        this.output = await getJsonFromBinary("bzip2");
+      } catch (e) {
+        console.error("Error get Json from binary:", e);
+      }
+    },
     randomData(N) {
       return {
         nodes: [...Array(N).keys()].map(i => ({ id: i })),
@@ -41,6 +54,9 @@ export default {
       }
     },
     initializeGraph() {
+      console.log(this.output);
+      this.getJson().then(() => { console.log(this.output) });
+      // console.log(this.output);
       const NODE_R = 6;
       let height = document.getElementById("forceGraph").scrollHeight;
       let width = document.getElementById("forceGraph").scrollWidth;
@@ -164,8 +180,12 @@ export default {
           this.rerenderGraph();
         })
         .onNodeClick(node => {
-          this.clickedObject.node = node
-          // console.log(this.clickedObject.node)
+          this.clickedNode = node.key;
+          console.log(this.clickedNode);
+          console.log(node);
+        })
+        .onLinkClick(link => {
+          console.log(link);
         });
     },
     rerenderGraph() {

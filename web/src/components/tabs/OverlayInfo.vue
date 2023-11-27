@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>Left-click: view node/link info</div>
-        {{ clickedObject.node.key }}
+        {{ clickedNode }}
         <div>Reft-click: focus on node</div>
     </div>
     <!-- <div v-if="">
@@ -21,14 +21,20 @@
 <script>
 export default {
     name: 'OverlayInfo',
-    props: ['clickedObject'],
+    props: ['clickedNode', 'clickedLink'],
     mounted() {
         this.init();
+    },
+    beforeUpdate() {
+        console.log('over beforeUpdate')
+    },
+    updated() {
+        console.log('over update')
     },
     methods: {
         init() {
             console.log("overlay info")
-            console.log(clickedObject)
+            console.log(clickedNode)
         }
     }
 }

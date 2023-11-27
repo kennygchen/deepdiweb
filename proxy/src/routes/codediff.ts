@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { get_function,add_function } from '../database';
+import { get_function, add_function } from '../database';
 import { exec, spawn } from "child_process";
 import { UploadedFile } from 'express-fileupload';
 import { CODE_DIFF_UPLOAD_DIR, UPLOAD_DIR } from '../config';
@@ -95,7 +95,7 @@ const rootDir = path.dirname(currentDir) + '/';  // root directory = /Users/.../
 // console.debug('rootDir: ' + rootDir);
 const sigmadiffDir = 'SigmaDiff/'
 
-function execShellCommand(cmd : any, name : string) {
+function execShellCommand(cmd: any, name: string) {
     return new Promise((resolve, reject) => {
         // // Check real-time logs or outputs of the command
         // const command = spawn(cmd, [origin_file], { shell: true });
@@ -117,7 +117,7 @@ function execShellCommand(cmd : any, name : string) {
         // });
 
         // set buffer size to 10MB to avoid maxBufferSize exceed error
-        exec(cmd, {maxBuffer: 10 * 1024 * 1024 }, (error: any, stdout: string, stderr: any) => {
+        exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error: any, stdout: string, stderr: any) => {
             if (error) {
                 console.warn(error);
                 reject(error);
@@ -129,8 +129,8 @@ function execShellCommand(cmd : any, name : string) {
 }
 
 async function runSigmaDiff(req: Request, res: Response) {
-    try{
-        const { origin_file,compared_file } = req.body;
+    try {
+        const { origin_file, compared_file } = req.body;
 
         let f1 = `${rootDir}/${sigmadiffDir}data/origin_file/${origin_file}`
         let f2 = `${rootDir}/${sigmadiffDir}data/compared_file/${compared_file}`
@@ -138,17 +138,17 @@ async function runSigmaDiff(req: Request, res: Response) {
         let output = `${rootDir}${sigmadiffDir}out/${origin_file}_and_${compared_file}`
         let command = `cd src/SigmaDiff/ && python3 sigmadiff.py --input1 ${f1} --input2 ${f2} --ghidra_home ${ghidra_home} --output_dir ${output}`
         console.log('[runSigmaDiff] ' + command)
-        execShellCommand(command,origin_file)
-        .then((origin_file) => {
-            console.log('finished sigmadiff')
-            let result = 'good'
-            res.status(200).json({ result });
-        })
-        .catch((e) => {
-            console.log('[runSigmaDiff] failed: ' + e.message);
-            res.status(400).send('An error occured while trying to process the code diff.');
-        })
-    }catch (ex) {
+        execShellCommand(command, origin_file)
+            .then((origin_file) => {
+                console.log('finished sigmadiff')
+                let result = 'good'
+                res.status(200).json({ result });
+            })
+            .catch((e) => {
+                console.log('[runSigmaDiff] failed: ' + e.message);
+                res.status(400).send('An error occured while trying to process the code diff.');
+            })
+    } catch (ex) {
         console.error(`An error occured while trying to code diff: ${ex}`);
         res.status(400).send('An error occured while trying to process the code diff.');
     }
@@ -187,22 +187,22 @@ async function getCodeDiffResult(req: Request, res: Response) {
         const currentDir = path.dirname(__filename);
         console.log('currentDir: ' + currentDir);
 
-        if(name && target) {
+        if (name && target) {
             const folder1 = `${diffItem.file1.projectName}`;
             const folder2 = `${diffItem.file2.projectName}`;  // ${latestModifiedDir}/
             const command = `cd ${sigmaDiffOutDir} && python3 evaluate_token.py -f ${name} ${target} -n ${folder1} ${folder2}` // -d ${rootDir}/SigmaDiff/out
 
             execShellCommand(command, name)
-            .then((name)=> {
-                const fileName: string = `${sigmaDiffOutDir}/${latestModifiedDir}/${name}.html`;
-                let result = fs.readFileSync(fileName, 'utf8');
-                res.status(200).json({ result })
-            })
-            .catch((e) => {
-                console.log(e)
-                res.status(400).send('getCodeDiffResult: An error occured while executing evaluate_token.py.');
-            })
-        }else {
+                .then((name) => {
+                    const fileName: string = `${sigmaDiffOutDir}/${latestModifiedDir}/${name}.html`;
+                    let result = fs.readFileSync(fileName, 'utf8');
+                    res.status(200).json({ result })
+                })
+                .catch((e) => {
+                    console.log(e)
+                    res.status(400).send('getCodeDiffResult: An error occured while executing evaluate_token.py.');
+                })
+        } else {
             res.status(400).send('getCodeDiffResult: An error occured while trying to process the code diff.');
         }
 
@@ -215,7 +215,7 @@ async function getCodeDiffResult(req: Request, res: Response) {
 }
 
 async function readFunctions(req: Request, res: Response) {
-    try{
+    try {
         const filename1 = req.query.filename1 as string;
         const filename2 = req.query.filename2 as string;
         // const { filename1, filename2 } = req.body; // Assuming filenames are sent in the request body
@@ -223,33 +223,59 @@ async function readFunctions(req: Request, res: Response) {
         const targetDirectory = `${filename1}_vs_${filename2}`;
         const source = `src/SigmaDiff/out/${filename1}_and_${filename2}/`
         const getDirectories = fs.readdirSync(source, { withFileTypes: true })
-                                .filter(function(dirent) {
-                                    if (dirent.isDirectory() && dirent.name.includes(targetDirectory) && !dirent.name.includes('Pretrain')){
-                                        return true;
-                                    }
-                                    return false;
-                                })
-                                .map(dirent => dirent.name)
-                    
+            .filter(function (dirent) {
+                if (dirent.isDirectory() && dirent.name.includes(targetDirectory) && !dirent.name.includes('Pretrain')) {
+                    return true;
+                }
+                return false;
+            })
+            .map(dirent => dirent.name)
+
         const fileName: string = `${source}/${getDirectories[0]}/matched_functions.txt`;
         const readline = require('readline');
-        let fileStream  = fs.createReadStream(fileName)
-        
+        let fileStream = fs.createReadStream(fileName)
+
         const rl = readline.createInterface({
             input: fileStream,
             crlfDelay: Infinity
         });
-        let functions:string[] = []
+        let functions: string[] = []
         for await (const line of rl) {
             const words = line.split(" ")
-            add_function(words[0],words[1])
+            add_function(words[0], words[1])
             functions.push(words[0])
         }
         res.status(200).json({ functions })
     }
-    catch(ex) {
+    catch (ex) {
         console.error(`CodeDiff: An error occured while trying to read functions: ${ex}`);
         res.status(400).send('CodeDiff: An error occured while trying to read functions.');
+    }
+}
+
+async function getJsonFromBinary(req: Request, res: Response) {
+    try {
+        const name = req.query.name as string;
+        console.log(name)
+
+        let bindir = `${rootDir}webportal/spec2006x86/O2/${name}`
+        let outdir = `${rootDir}webportal/spec2006x86/O2_out`
+        let ghidradir = `${rootDir}ghidra_10.2.2_PUBLIC`
+        let scriptdir = `${rootDir}webportal/ghidra_scripts`
+        let projdir = `${rootDir}webportal/ghidra`
+        let decompdir = `${rootDir}webportal/spec2006x86/decompiled`
+        let command = `cd src/webportal/ && python run.py --bindir ${bindir} --outdir ${outdir} --ghidradir ${ghidradir} --scriptdir ${scriptdir} --projdir ${projdir} --decompdir ${decompdir}`
+        exec(command,
+            function (error, stdout, stderr) {
+                console.log('stdout: ' + stdout);
+                console.log('stderr: ' + stderr);
+                if (error !== null) {
+                    console.log('exec error: ' + error);
+                }
+            });
+    } catch (ex) {
+        console.error(`An error occured while trying to decompile: ${ex}`);
+        res.status(400).send('An error occured while trying to process the binary.');
     }
 }
 
@@ -309,9 +335,9 @@ export default async function codeDiffUpload(req: Request, res: Response) {
         console.log('[codeDiffUpload] file_name: ' + file_name + ', file_name_no_ext: ' + file_name_no_ext)
 
         await fs.promises.rename(file.tempFilePath, file_path);
-        
+
         if (Number(order) === 0) {
-            fs.copyFile(file_path,file_path_zoom, function (err) {
+            fs.copyFile(file_path, file_path_zoom, function (err) {
                 if (err) {
                     console.log(err)
                 }
@@ -319,7 +345,7 @@ export default async function codeDiffUpload(req: Request, res: Response) {
             })
         }
         else if (Number(order) === 1) {
-            fs.copyFile(file_path,file_path_tur, function (err) {
+            fs.copyFile(file_path, file_path_tur, function (err) {
                 if (err) {
                     console.log(err)
                 }
@@ -420,4 +446,4 @@ export const getJsonContent = (req: Request, res: Response): void => {
     }
 };
 
-export { readFunctions, getCodeDiffResult, readScript, runSigmaDiff, codeDiffUpload, initializeJsonFile }
+export { readFunctions, getCodeDiffResult, readScript, runSigmaDiff, codeDiffUpload, initializeJsonFile, getJsonFromBinary }

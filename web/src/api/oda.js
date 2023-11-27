@@ -508,6 +508,20 @@ export async function getJsonContent () {
   }
 }
 
+export async function getJsonFromBinary (binaryName) {
+  try {
+    const response = await odaAxios.get('/odaweb/api/getJsonFromBinary/', {
+      params: {
+        name: binaryName
+      }
+    })
+    console.log('call getJsonFromBinary')
+    return response.data
+  } catch (e) {
+    error({ e, message: e.response.data.detail })
+  }
+}
+
 // export async function createStructure(name) {
 //   try {
 //     const response = await odaAxios.post('/odaweb/api/cstructs/', {
