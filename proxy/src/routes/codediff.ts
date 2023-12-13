@@ -273,7 +273,9 @@ async function getJsonFromBinary(req: Request, res: Response) {
                     console.log('exec error: ' + error);
                 } else {
                     console.log("Finished processing all binaries.");
-                    // res.status(200).json();
+                    const fileName: string = `${rootDir}webportal/spec2006x86/O2_out/${name}/${name}.json`
+                    const content = readJsonFile(fileName);
+                    res.status(200).json(content);
                 }
             });
     } catch (ex) {

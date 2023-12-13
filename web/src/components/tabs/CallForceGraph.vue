@@ -19,7 +19,7 @@ export default {
   },
   data() {
     return {
-      output: "",
+      jsonData: null,
       graph: null,
       clickedNode: "Hello",
       clickedLink: null,
@@ -31,7 +31,13 @@ export default {
   methods: {
     async getJson() {
       try {
-        this.output = await getJsonFromBinary("bzip2");
+        this.jsonData = await getJsonFromBinary("bzip2");
+        // console.log(output)
+        // console.log(output.nodes)
+        // console.log(output.links)
+
+        // this.jsonData = JSON.parse(JSON.stringify(output))
+        // console.log(jsonData)
       } catch (e) {
         console.error("Error get Json from binary:", e);
       }
@@ -48,9 +54,10 @@ export default {
       }
     },
     initializeGraph() {
-      console.log(this.output);
-      this.getJson().then(() => { console.log(this.output) });
-      // console.log(this.output);
+      this.getJson().then(() => {
+        // console.log(this.jsonData)
+        this.graph.graphData(this.jsonData)
+      });
       const NODE_R = 6;
       let height = document.getElementById("forceGraph").scrollHeight;
       let width = document.getElementById("forceGraph").scrollWidth;
@@ -70,6 +77,7 @@ export default {
         source.links.push(link);
         target.links.push(link);
       });
+      // console.log(gData)
 
       const highlightNodes = new Set();
       const highlightLinks = new Set();

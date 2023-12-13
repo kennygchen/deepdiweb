@@ -18,6 +18,8 @@ def decompile(name, bindir, outdir, ghidradir, scriptdir, projdir, decompdir):
         with open(f"{outdir}/{binary}/out", "w") as f:
             f.write(f"Elapsed Time: {int(end_time - start_time)} seconds")
 
+        if os.path.exists(f"{outdir}/{binary}/{binary}.json"):
+            os.remove(f"{outdir}/{binary}/{binary}.json")
         os.rename(f"{decompdir}/{binary}.json", f"{outdir}/{binary}/{binary}.json")
 
 def main():
@@ -39,7 +41,6 @@ def main():
     decompdir = args.decompdir
     
     decompile(name, bindir, outdir, ghidradir, scriptdir, projdir, decompdir)
-
 
 if __name__ == "__main__":
     main()
