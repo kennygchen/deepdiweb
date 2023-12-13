@@ -255,7 +255,7 @@ async function readFunctions(req: Request, res: Response) {
 
 async function getJsonFromBinary(req: Request, res: Response) {
     try {
-        const name = req.query.name as string;
+        let name = req.query.name as string;
         console.log(name)
 
         let bindir = `${rootDir}webportal/spec2006x86/O2/${name}`
@@ -264,13 +264,16 @@ async function getJsonFromBinary(req: Request, res: Response) {
         let scriptdir = `${rootDir}webportal/ghidra_scripts`
         let projdir = `${rootDir}webportal/ghidra`
         let decompdir = `${rootDir}webportal/spec2006x86/decompiled`
-        let command = `cd src/webportal/ && python run.py --bindir ${bindir} --outdir ${outdir} --ghidradir ${ghidradir} --scriptdir ${scriptdir} --projdir ${projdir} --decompdir ${decompdir}`
+        let command = `cd src/webportal/ && python run.py --name ${name} --bindir ${bindir} --outdir ${outdir} --ghidradir ${ghidradir} --scriptdir ${scriptdir} --projdir ${projdir} --decompdir ${decompdir}`
         exec(command,
             function (error, stdout, stderr) {
                 console.log('stdout: ' + stdout);
                 console.log('stderr: ' + stderr);
                 if (error !== null) {
                     console.log('exec error: ' + error);
+                } else {
+                    console.log("Finished processing all binaries.");
+                    // res.status(200).json();
                 }
             });
     } catch (ex) {

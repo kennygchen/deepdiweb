@@ -28,12 +28,6 @@ export default {
   mounted() {
     this.initializeGraph();
   },
-  beforeUpdate() {
-    console.log('beforeUpdate')
-  },
-  updated() {
-    console.log('update')
-  },
   methods: {
     async getJson() {
       try {

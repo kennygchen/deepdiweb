@@ -78,12 +78,9 @@ public class IndirectCallTargetResolving extends GhidraScript {
 	public static String pwd = System.getProperty("user.dir");
 	public static Path currentPath = Paths.get(pwd);
 	public static String parentPath = currentPath.getParent().toString();
-	public static String targetPath = parentPath
-			+ "/spec2006x86/O2_out/targets.txt";
-	public static String outPath = parentPath
-			+ "/spec2006x86/O2_out/solved_copy.txt";
-	public static String decompiledPath = parentPath
-			+ "/spec2006x86/decompiled/";
+	public static String targetPath = parentPath + "/spec2006x86/O2_out/targets.txt";
+	public static String outPath = parentPath + "/spec2006x86/O2_out/solved_copy.txt";
+	public static String decompiledPath = parentPath + "/spec2006x86/decompiled/";
 	private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 	public JSONArray nodes = new JSONArray();
 	public JSONArray edges = new JSONArray();

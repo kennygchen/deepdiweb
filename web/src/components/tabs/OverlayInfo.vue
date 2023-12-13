@@ -25,12 +25,6 @@ export default {
     mounted() {
         this.init();
     },
-    beforeUpdate() {
-        console.log('over beforeUpdate')
-    },
-    updated() {
-        console.log('over update')
-    },
     methods: {
         init() {
             console.log("overlay info")
