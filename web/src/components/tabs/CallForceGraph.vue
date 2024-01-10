@@ -41,7 +41,6 @@ export default {
     async getJson() {
       try {
         this.jsonData = await getJsonFromBinary("bzip2")
-        this.graph.graphData(this.jsonData)
         // console.log(this.jsonData)
         // this.graph.graphData(await getJsonFromBinary("bzip2"))
       } catch (e) {
@@ -61,11 +60,13 @@ export default {
       }
     },
     initializeGraph() {
-      // this.getJson().then(() => {});
+      this.getJson().then(() => {
+        this.crossLinkObject()
+      });
       const NODE_R = 6;
       let height = document.getElementById("forceGraph").scrollHeight;
       let width = document.getElementById("forceGraph").scrollWidth;
-      const gData = gdot;
+      let gData = gdot;
 
       // cross-link node objects
       gData.links.forEach((link) => {
@@ -213,6 +214,25 @@ export default {
         .linkDirectionalParticles(this.graph.linkDirectionalParticles())
         .nodeThreeObject(this.graph.nodeThreeObject());
     },
+    crossLinkObject() {
+      console.log("cross link new json")
+      let gData = this.jsonData
+      gData.links.forEach((link) => {
+        const source = gData.nodes.find((node) => node.key === link.source);
+        const target = gData.nodes.find((node) => node.key === link.target);
+
+        !source.neighbors && (source.neighbors = []);
+        !target.neighbors && (target.neighbors = []);
+        source.neighbors.push(target);
+        target.neighbors.push(source);
+        !source.links && (source.links = []);
+        !target.links && (target.links = []);
+        source.links.push(link);
+        target.links.push(link);
+      });
+
+      this.graph.graphData(gData)
+    }
   }
 }
 </script>

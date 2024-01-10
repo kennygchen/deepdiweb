@@ -84,7 +84,7 @@ public class IndirectCallTargetResolving extends GhidraScript {
 	private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 	public JSONArray nodes = new JSONArray();
 	public JSONArray edges = new JSONArray();
-	HashMap<Function, JSONObject> funcMap = new HashMap<Function, JSONObject>();
+	HashMap<String, JSONObject> funcMap = new HashMap<String, JSONObject>();
 	HashMap<DSNode, JSONObject> dsnodeMap = new HashMap<DSNode, JSONObject>();
 
 	public static String bytesToHex(byte[] bytes) {
@@ -138,14 +138,14 @@ public class IndirectCallTargetResolving extends GhidraScript {
 		FunctionIterator functionManager = this.currentProgram.getFunctionManager().getFunctions(true);
 
 		for (Function func : functionManager) {
-			if (funcMap.get(func) == null) {
-				funcMap.put(func, getFuncJSON(func));
-				nodes.add(funcMap.get(func));
+			if (funcMap.get(func.toString()) == null) {
+				funcMap.put(func.toString(), getFuncJSON(func));
+				nodes.add(funcMap.get(func.toString()));
 			}
 			for (Function callee : func.getCalledFunctions(monitor)) {
-				if (funcMap.get(callee) == null) {
-					funcMap.put(callee, getFuncJSON(callee));
-					nodes.add(funcMap.get(callee));
+				if (funcMap.get(callee.toString()) == null) {
+					funcMap.put(callee.toString(), getFuncJSON(callee));
+					nodes.add(funcMap.get(callee.toString()));
 				}
 
 				/*
@@ -154,8 +154,8 @@ public class IndirectCallTargetResolving extends GhidraScript {
 				 */
 				JSONObject edgeObj = new JSONObject();
 				edgeObj.put("key", String.valueOf(edges.size()));
-				edgeObj.put("source", func.getName().toString());
-				edgeObj.put("target", callee.getName().toString());
+				edgeObj.put("source", func.toString());
+				edgeObj.put("target", callee.toString());
 				edges.add(edgeObj);
 			}
 		}
@@ -174,14 +174,14 @@ public class IndirectCallTargetResolving extends GhidraScript {
 						JSONObject edgeObj = new JSONObject();
 						edgeObj.put("key", String.valueOf(edges.size()));
 						edgeObj.put("source", key);
-						edgeObj.put("target", f.getName().toString());
+						edgeObj.put("target", f.toString());
 						edges.add(edgeObj);
 					}
 
 					for (Function f : w) {
 						JSONObject edgeObj = new JSONObject();
 						edgeObj.put("key", String.valueOf(edges.size()));
-						edgeObj.put("source", f.getName().toString());
+						edgeObj.put("source", f.toString());
 						edgeObj.put("target", key);
 						edges.add(edgeObj);
 					}
@@ -202,13 +202,13 @@ public class IndirectCallTargetResolving extends GhidraScript {
 					JSONObject edgeObj = new JSONObject();
 					edgeObj.put("key", String.valueOf(edges.size()));
 					edgeObj.put("source", key);
-					edgeObj.put("target", f.getName().toString());
+					edgeObj.put("target", f.toString());
 					edges.add(edgeObj);
 				}
 				for (Function f : w) {
 					JSONObject edgeObj = new JSONObject();
 					edgeObj.put("key", String.valueOf(edges.size()));
-					edgeObj.put("source", f.getName().toString());
+					edgeObj.put("source", f.toString());
 					edgeObj.put("target", key);
 					edges.add(edgeObj);
 				}
