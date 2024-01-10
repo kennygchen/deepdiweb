@@ -1,27 +1,25 @@
 <template>
-    <div>
+    <div v-if="clickType == null">
         <div>Left-click: view node/link info</div>
-        {{ clickedNode }}
-        <div>Reft-click: focus on node</div>
     </div>
-    <!-- <div v-if="">
-            <div>Key: {clicked.clicked ? clicked.clicked.key : "null"}</div>
-        <div>Source: {clicked.clicked ? clicked.clicked.source.key : "null"}</div>
-        <div>Target: {clicked.clicked ? clicked.clicked.target.key : "null"}</div>
-        <div>Weight: {clicked.clicked ? clicked.clicked.attributes.weight : "null"}</div>
+    <div v-else-if="clickType == 'node'">
+        <div>Key: {{ clickedNodeKey }}</div>
+        <div>Modularity class: {{ clickedNodeMC }}</div>
+        <div>Memory Object: {{ clickedNodeMO }}</div>
+        <div>Offset: {{ clickedNodeOffset }}</div>
     </div>
-    <div v-if="">
-            <div>Key: {clicked.clicked ? clicked.clicked.key : "null"}</div>
-        <div>Modularity class: {clicked.clicked ? clicked.clicked.attributes.modularity_class : "null"}</div>
-        <div>Memory Object: {clicked.clicked ? clicked.clicked.attributes.MemoryObject : "null"}</div>
-        <div>Offset: {clicked.clicked ? clicked.clicked.attributes.Offset : "null"}</div>
-    </div> -->
+    <div v-else-if="clickType == 'link'">
+        <div>Key: {{ clickedLinkKey }}</div>
+        <div>Source: {{ clickedLinkSource }}</div>
+        <div>Target: {{ clickedLinkTarget }}</div>
+        <div>Weight: {{ clickedLinkWeight }}</div>
+    </div>
 </template>
 
 <script>
 export default {
     name: 'OverlayInfo',
-    props: ['clickedNode', 'clickedLink'],
+    props: ['clickType', 'clickedNodeKey', 'clickedNodeMC', 'clickedNodeMO', 'clickedNodeOffset', 'clickedLinkKey', 'clickedLinkSource', 'clickedLinkTarget', 'clickedLinkWeight'],
     mounted() {
         this.init();
     },

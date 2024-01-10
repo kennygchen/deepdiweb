@@ -1,7 +1,10 @@
 <template>
   <div>
     <div class="forceGraphHolder" id="forceGraphHolder"></div>
-    <OverlayInfo class="overlay-container" :clickedNode="this.clickedNode" :clickedLink="this.clickedLink" />
+    <OverlayInfo class="overlay-container" :clickType="this.clickType" :clickedNodeKey="this.clickedNodeKey"
+      :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO" :clickedNodeOffset="this.clickedNodeOffset"
+      :clickedLinkKey="this.clickedLinkKey" :clickedLinkSource="this.clickedLinkSource"
+      :clickedLinkTarget="this.clickedLinkTarget" :clickedLinkWeight="this.clickedLinkWeight" />
   </div>
 </template>
 
@@ -19,10 +22,16 @@ export default {
   },
   data() {
     return {
-      jsonData: null,
       graph: null,
-      clickedNode: "Hello",
-      clickedLink: null,
+      clickType: null,
+      clickedNodeKey: null,
+      clickedNodeMC: null,
+      clickedNodeMO: null,
+      clickedNodeOffset: null,
+      clickedLinkKey: null,
+      clickedLinkSource: null,
+      clickedLinkTarget: null,
+      clickedLinkWeight: null,
     }
   },
   mounted() {
@@ -31,33 +40,28 @@ export default {
   methods: {
     async getJson() {
       try {
-        this.jsonData = await getJsonFromBinary("bzip2");
-        // console.log(output)
-        // console.log(output.nodes)
-        // console.log(output.links)
-
-        // this.jsonData = JSON.parse(JSON.stringify(output))
-        // console.log(jsonData)
+        this.jsonData = await getJsonFromBinary("bzip2")
+        this.graph.graphData(this.jsonData)
+        // console.log(this.jsonData)
+        // this.graph.graphData(await getJsonFromBinary("bzip2"))
       } catch (e) {
         console.error("Error get Json from binary:", e);
       }
     },
     randomData(N) {
       return {
-        nodes: [...Array(N).keys()].map(i => ({ id: i })),
+        nodes: [...Array(N).keys()].map(i => ({ key: i, attributes: { label: i, modularity_class: 1, MemoryObject: null } })),
         links: [...Array(N).keys()]
           .filter(id => id)
           .map(id => ({
             source: id,
+            key: id,
             target: Math.round(Math.random() * (id - 1))
           }))
       }
     },
     initializeGraph() {
-      this.getJson().then(() => {
-        // console.log(this.jsonData)
-        this.graph.graphData(this.jsonData)
-      });
+      // this.getJson().then(() => {});
       const NODE_R = 6;
       let height = document.getElementById("forceGraph").scrollHeight;
       let width = document.getElementById("forceGraph").scrollWidth;
@@ -123,7 +127,6 @@ export default {
                   emissive: "#555555",
                 })
               )
-              // ? console.log(node)
               : node.attributes.MemoryObject !== "null"
                 ? new THREE.Mesh(     // Memory object
                   new THREE.BoxGeometry(15, 15, 15),
@@ -144,7 +147,6 @@ export default {
                       emissive: "#555555",
                     })
                   )
-                  // ? console.log(node)
                   : false
         )
         .linkSource("source")
@@ -182,13 +184,28 @@ export default {
           this.rerenderGraph();
         })
         .onNodeClick(node => {
-          this.clickedNode = node.key;
-          console.log(this.clickedNode);
-          console.log(node);
+          this.clickType = 'node';
+          this.clickedNodeKey = node.key;
+          this.clickedNodeMC = node.attributes.modularity_class;
+          this.clickedNodeMO = node.attributes.MemoryObject;
+          this.clickedNodeOffset = node.attributes.Offset;
+          // console.log(this.clickedNodeKey);
+          // console.log(this.clickedNodeMC);
+          // console.log(this.clickedNodeMO);
+          // console.log(this.clickedNodeOffset);
         })
         .onLinkClick(link => {
-          console.log(link);
-        });
+          this.clickType = 'link';
+          this.clickedLinkKey = link.key
+          this.clickedLinkSource = link.source.key
+          this.clickedLinkTarget = link.target.key
+          this.clickedLinkWeight = link.attributes.weight
+          // console.log(this.clickedLinkKey);
+          // console.log(this.clickedLinkSource);
+          // console.log(this.clickedLinkTarget);
+          // console.log(this.clickedLinkWeight);
+        })
+        .onBackgroundClick(() => { this.clickType = null });
     },
     rerenderGraph() {
       this.graph
