@@ -5,6 +5,7 @@
       :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO" :clickedNodeOffset="this.clickedNodeOffset"
       :clickedLinkKey="this.clickedLinkKey" :clickedLinkSource="this.clickedLinkSource"
       :clickedLinkTarget="this.clickedLinkTarget" :clickedLinkWeight="this.clickedLinkWeight" />
+    <Popup v-if="buttonTrigger" :TogglePopup="() => this.togglePopup()" />
   </div>
 </template>
 
@@ -13,12 +14,14 @@ import ForceGraph3D from '3d-force-graph';
 import gdot from "./gdot.json";
 import * as THREE from "three";
 import OverlayInfo from './OverlayInfo.vue';
-import { getJsonFromBinary } from '../../api/oda'
+import Popup from './Popup.vue';
+import { getJsonFromBinary } from '../../api/oda';
 
 export default {
   name: 'CallForceGrpah',
   components: {
     OverlayInfo: () => import('./OverlayInfo.vue'),
+    Popup: () => import('./Popup.vue'),
   },
   data() {
     return {
@@ -32,6 +35,8 @@ export default {
       clickedLinkSource: null,
       clickedLinkTarget: null,
       clickedLinkWeight: null,
+      buttonTrigger: false,
+      popupNode: null,
     }
   },
   mounted() {
@@ -82,7 +87,6 @@ export default {
         source.links.push(link);
         target.links.push(link);
       });
-      // console.log(gData)
 
       const highlightNodes = new Set();
       const highlightLinks = new Set();
@@ -190,10 +194,9 @@ export default {
           this.clickedNodeMC = node.attributes.modularity_class;
           this.clickedNodeMO = node.attributes.MemoryObject;
           this.clickedNodeOffset = node.attributes.Offset;
-          // console.log(this.clickedNodeKey);
-          // console.log(this.clickedNodeMC);
-          // console.log(this.clickedNodeMO);
-          // console.log(this.clickedNodeOffset);
+          if (node.attributes.MemoryObject !== "null") {
+            this.togglePopup()
+          }
         })
         .onLinkClick(link => {
           this.clickType = 'link';
@@ -201,12 +204,10 @@ export default {
           this.clickedLinkSource = link.source.key
           this.clickedLinkTarget = link.target.key
           this.clickedLinkWeight = link.attributes.weight
-          // console.log(this.clickedLinkKey);
-          // console.log(this.clickedLinkSource);
-          // console.log(this.clickedLinkTarget);
-          // console.log(this.clickedLinkWeight);
         })
-        .onBackgroundClick(() => { this.clickType = null });
+        .onBackgroundClick(() => {
+          this.clickType = null
+        });
     },
     rerenderGraph() {
       this.graph
@@ -232,6 +233,14 @@ export default {
       });
 
       this.graph.graphData(gData)
+    },
+    togglePopup() {
+      this.buttonTrigger = !this.buttonTrigger
+      if (this.buttonTrigger) {
+        this.graph.pauseAnimation()
+      } else {
+        this.graph.resumeAnimation()
+      }
     }
   }
 }
@@ -248,7 +257,6 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  width: 550px;
   height: auto;
   border-radius: 25px;
   margin: 10px;
@@ -256,7 +264,7 @@ export default {
   background: black;
   border: 1px solid white;
   color: white;
-  opacity: 85%;
+  opacity: 70%;
   z-index: 5;
 }
 </style>

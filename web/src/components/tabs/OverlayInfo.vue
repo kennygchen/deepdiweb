@@ -1,18 +1,18 @@
 <template>
     <div v-if="clickType == null">
-        <div>Left-click: view node/link info</div>
+        <div><b>Left-click: </b>view node/link info</div>
     </div>
     <div v-else-if="clickType == 'node'">
-        <div>Key: {{ clickedNodeKey }}</div>
-        <div>Modularity class: {{ clickedNodeMC }}</div>
-        <div>Memory Object: {{ clickedNodeMO }}</div>
-        <div>Offset: {{ clickedNodeOffset }}</div>
+        <div><b>Key: </b>{{ clickedNodeKey }}</div>
+        <div><b>Modularity class: </b>{{ clickedNodeMC }}</div>
+        <div><b>Memory Object: </b>{{ clickedNodeMO }}</div>
+        <div><b>Offset: </b>{{ clickedNodeOffset }}</div>
     </div>
     <div v-else-if="clickType == 'link'">
-        <div>Key: {{ clickedLinkKey }}</div>
-        <div>Source: {{ clickedLinkSource }}</div>
-        <div>Target: {{ clickedLinkTarget }}</div>
-        <div>Weight: {{ clickedLinkWeight }}</div>
+        <div><b>Key: </b>{{ clickedLinkKey }}</div>
+        <div><b>Source: </b>{{ clickedLinkSource }}</div>
+        <div><b>Target: </b>{{ clickedLinkTarget }}</div>
+        <div><b>Weight: </b>{{ clickedLinkWeight }}</div>
     </div>
 </template>
 
@@ -32,4 +32,4 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped></style>
