@@ -12,7 +12,7 @@
         <div><b>Key: </b>{{ clickedLinkKey }}</div>
         <div><b>Source: </b>{{ clickedLinkSource }}</div>
         <div><b>Target: </b>{{ clickedLinkTarget }}</div>
-        <div><b>Weight: </b>{{ clickedLinkWeight }}</div>
+        <!-- <div><b>Weight: </b>{{ clickedLinkWeight }}</div> -->
     </div>
 </template>
 
@@ -20,15 +20,6 @@
 export default {
     name: 'OverlayInfo',
     props: ['clickType', 'clickedNodeKey', 'clickedNodeMC', 'clickedNodeMO', 'clickedNodeOffset', 'clickedLinkKey', 'clickedLinkSource', 'clickedLinkTarget', 'clickedLinkWeight'],
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
-            console.log("overlay info")
-            console.log(clickedNode)
-        }
-    }
 }
 </script>
 

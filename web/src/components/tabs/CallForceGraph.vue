@@ -5,27 +5,35 @@
       :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO" :clickedNodeOffset="this.clickedNodeOffset"
       :clickedLinkKey="this.clickedLinkKey" :clickedLinkSource="this.clickedLinkSource"
       :clickedLinkTarget="this.clickedLinkTarget" :clickedLinkWeight="this.clickedLinkWeight" />
-    <Popup v-if="buttonTrigger" :TogglePopup="() => this.togglePopup()" />
+    <Popup v-if="buttonTrigger" :TogglePopup="() => this.togglePopup()" :onNodeClick="setClickedNode"
+      :onLinkClick="handleLinkClick" :crossLinkObject="crossLinkObject" :node="popupNode" />
   </div>
 </template>
 
 <script>
-import ForceGraph3D from '3d-force-graph';
-import gdot from "./gdot.json";
-import * as THREE from "three";
-import OverlayInfo from './OverlayInfo.vue';
-import Popup from './Popup.vue';
-import { getJsonFromBinary } from '../../api/oda';
+import ForceGraph3D from '3d-force-graph'
+import gdot from "./gdot.json"
+import * as THREE from "three"
+import OverlayInfo from './OverlayInfo.vue'
+import Popup from './Popup.vue'
+import { getJsonFromBinary } from '../../api/oda'
+import { ref } from 'vue'
 
 export default {
   name: 'CallForceGrpah',
+  setup() {
+    const popupNode = ref(node)
+
+    return {
+      popupNode
+    }
+  },
   components: {
     OverlayInfo: () => import('./OverlayInfo.vue'),
     Popup: () => import('./Popup.vue'),
   },
   data() {
     return {
-      graph: null,
       clickType: null,
       clickedNodeKey: null,
       clickedNodeMC: null,
@@ -36,61 +44,32 @@ export default {
       clickedLinkTarget: null,
       clickedLinkWeight: null,
       buttonTrigger: false,
-      popupNode: null,
     }
   },
   mounted() {
-    this.initializeGraph();
+    this.initializeGraph()
   },
   methods: {
     async getJson() {
       try {
         this.jsonData = await getJsonFromBinary("bzip2")
-        // console.log(this.jsonData)
-        // this.graph.graphData(await getJsonFromBinary("bzip2"))
       } catch (e) {
-        console.error("Error get Json from binary:", e);
-      }
-    },
-    randomData(N) {
-      return {
-        nodes: [...Array(N).keys()].map(i => ({ key: i, attributes: { label: i, modularity_class: 1, MemoryObject: null } })),
-        links: [...Array(N).keys()]
-          .filter(id => id)
-          .map(id => ({
-            source: id,
-            key: id,
-            target: Math.round(Math.random() * (id - 1))
-          }))
+        console.error("Error get JSON from binary:", e)
       }
     },
     initializeGraph() {
-      this.getJson().then(() => {
-        this.crossLinkObject()
-      });
-      const NODE_R = 6;
-      let height = document.getElementById("forceGraph").scrollHeight;
-      let width = document.getElementById("forceGraph").scrollWidth;
-      let gData = gdot;
+      const NODE_R = 6
 
-      // cross-link node objects
-      gData.links.forEach((link) => {
-        const source = gData.nodes.find((node) => node.key === link.source);
-        const target = gData.nodes.find((node) => node.key === link.target);
+      this.highlightNodes = new Set()
+      this.highlightLinks = new Set()
+      this.hoverNode = null
 
-        !source.neighbors && (source.neighbors = []);
-        !target.neighbors && (target.neighbors = []);
-        source.neighbors.push(target);
-        target.neighbors.push(source);
-        !source.links && (source.links = []);
-        !target.links && (target.links = []);
-        source.links.push(link);
-        target.links.push(link);
-      });
+      let height = document.getElementById("forceGraph").scrollHeight
+      let width = document.getElementById("forceGraph").scrollWidth
 
-      const highlightNodes = new Set();
-      const highlightLinks = new Set();
-      let hoverNode = null;
+      // this.getJson().then(() => { })
+      // let gData = this.crossLinkObject(this.jsonData)
+      let gData = this.crossLinkObject(gdot)
 
       this.graph = ForceGraph3D()
         (document.getElementById("forceGraphHolder"))
@@ -102,7 +81,7 @@ export default {
         .nodeLabel(node => node.attributes.label)
         .nodeRelSize(NODE_R)
         .nodeAutoColorBy(node => node.attributes.modularity_class)
-        .nodeThreeObject(node => node === hoverNode && node.attributes.MemoryObject !== "null"
+        .nodeThreeObject(node => node === this.hoverNode && node.attributes.MemoryObject !== "null"
           ? new THREE.Mesh(         // Memory object on hover
             new THREE.BoxGeometry(15, 15, 15),
             new THREE.MeshLambertMaterial({
@@ -112,7 +91,7 @@ export default {
               emissive: "#555555",
             })
           )
-          : highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
+          : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
             ? new THREE.Mesh(       // Memory object neighbors
               new THREE.BoxGeometry(15, 15, 15),
               new THREE.MeshLambertMaterial({
@@ -122,7 +101,7 @@ export default {
                 emissive: "#555555",
               })
             )
-            : node === hoverNode
+            : node === this.hoverNode
               ? new THREE.Mesh(     // node on hover
                 new THREE.SphereGeometry(6, 8, 8),
                 new THREE.MeshLambertMaterial({
@@ -142,7 +121,7 @@ export default {
                     // emissive: "#a1a1a1",
                   })
                 )
-                : highlightNodes.has(node)
+                : this.highlightNodes.has(node)
                   ? new THREE.Mesh(     // node neighbors
                     new THREE.SphereGeometry(6, 8, 8),
                     new THREE.MeshLambertMaterial({
@@ -157,82 +136,85 @@ export default {
         .linkSource("source")
         .linkTarget("target")
         .linkOpacity(0.25)
-        .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
+        .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
         .linkDirectionalParticleWidth(2)
         .linkDirectionalParticleSpeed(0.005)
-        .linkWidth(link => highlightLinks.has(link) ? 4 : 1.5)
-        .onNodeHover(node => {
-          // no state change
-          if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
-          highlightNodes.clear();
-          highlightLinks.clear();
-          if (node) {
-            highlightNodes.add(node);
-            node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
-            node.links.forEach(link => highlightLinks.add(link));
-          }
+        .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
+        .onNodeClick(node => { this.handleNodeClick(node) })
+        .onLinkClick(link => { this.handleLinkClick(link) })
+        .onNodeHover(node => { this.handleNodeHover(node) })
+        .onLinkHover(link => { this.handleLinkHover(link) })
+        .onBackgroundClick(() => { this.clickType = null })
+    },
+    crossLinkObject(json) {
+      json.links.forEach((link) => {
+        const source = json.nodes.find((node) => node.key === link.source)
+        const target = json.nodes.find((node) => node.key === link.target)
 
-          hoverNode = node || null;
+        !source.neighbors && (source.neighbors = [])
+        !target.neighbors && (target.neighbors = [])
+        source.neighbors.push(target)
+        target.neighbors.push(source)
+        !source.links && (source.links = [])
+        !target.links && (target.links = [])
+        source.links.push(link)
+        target.links.push(link)
+      })
+      return json
+    },
+    handleNodeHover(node) {
+      // no state change
+      if ((!node && !this.highlightNodes.size) || (node && this.hoverNode === node)) return
+      this.highlightNodes.clear()
+      this.highlightLinks.clear()
+      if (node) {
+        this.highlightNodes.add(node)
+        node.neighbors.forEach(neighbor => this.highlightNodes.add(neighbor))
+        node.links.forEach(link => this.highlightLinks.add(link))
+      }
 
-          this.rerenderGraph();
-        })
-        .onLinkHover(link => {
-          highlightNodes.clear();
-          highlightLinks.clear();
+      this.hoverNode = node || null
 
-          if (link) {
-            highlightLinks.add(link);
-            highlightNodes.add(link.source);
-            highlightNodes.add(link.target);
-          }
+      this.rerenderGraph()
+    },
+    handleLinkHover(link) {
+      this.highlightNodes.clear()
+      this.highlightLinks.clear()
 
-          this.rerenderGraph();
-        })
-        .onNodeClick(node => {
-          this.clickType = 'node';
-          this.clickedNodeKey = node.key;
-          this.clickedNodeMC = node.attributes.modularity_class;
-          this.clickedNodeMO = node.attributes.MemoryObject;
-          this.clickedNodeOffset = node.attributes.Offset;
-          if (node.attributes.MemoryObject !== "null") {
-            this.togglePopup()
-          }
-        })
-        .onLinkClick(link => {
-          this.clickType = 'link';
-          this.clickedLinkKey = link.key
-          this.clickedLinkSource = link.source.key
-          this.clickedLinkTarget = link.target.key
-          this.clickedLinkWeight = link.attributes.weight
-        })
-        .onBackgroundClick(() => {
-          this.clickType = null
-        });
+      if (link) {
+        this.highlightLinks.add(link)
+        this.highlightNodes.add(link.source)
+        this.highlightNodes.add(link.target)
+      }
+
+      this.rerenderGraph()
+    },
+    handleNodeClick(node) {
+      this.clickType = 'node'
+      this.setClickedNode(node)
+      if (node.attributes.MemoryObject !== "null") {
+        this.popupNode = node
+        this.togglePopup()
+      }
+    },
+    setClickedNode(node) {
+      this.clickedNodeKey = node.key
+      this.clickedNodeMC = node.attributes.modularity_class
+      this.clickedNodeMO = node.attributes.MemoryObject
+      this.clickedNodeOffset = node.attributes.Offset
+    },
+    handleLinkClick(link) {
+      this.clickType = 'link'
+      this.clickedLinkKey = link.key
+      this.clickedLinkSource = link.source.key
+      this.clickedLinkTarget = link.target.key
+      this.clickedLinkWeight = link.attributes.weight
     },
     rerenderGraph() {
       this.graph
         .linkWidth(this.graph.linkWidth())
         .linkDirectionalParticles(this.graph.linkDirectionalParticles())
-        .nodeThreeObject(this.graph.nodeThreeObject());
-    },
-    crossLinkObject() {
-      console.log("cross link new json")
-      let gData = this.jsonData
-      gData.links.forEach((link) => {
-        const source = gData.nodes.find((node) => node.key === link.source);
-        const target = gData.nodes.find((node) => node.key === link.target);
-
-        !source.neighbors && (source.neighbors = []);
-        !target.neighbors && (target.neighbors = []);
-        source.neighbors.push(target);
-        target.neighbors.push(source);
-        !source.links && (source.links = []);
-        !target.links && (target.links = []);
-        source.links.push(link);
-        target.links.push(link);
-      });
-
-      this.graph.graphData(gData)
+        .nodeThreeObject(this.graph.nodeThreeObject())
     },
     togglePopup() {
       this.buttonTrigger = !this.buttonTrigger
@@ -265,6 +247,6 @@ export default {
   border: 1px solid white;
   color: white;
   opacity: 70%;
-  z-index: 5;
+  z-index: 99;
 }
 </style>
