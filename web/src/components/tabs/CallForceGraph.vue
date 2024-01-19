@@ -65,27 +65,77 @@ export default {
       // this.loading = true
       const NODE_R = 6
 
-      this.getJson().then(() => {
-        this.highlightNodes = new Set()
-        this.highlightLinks = new Set()
-        this.hoverNode = null
-        let height = document.getElementById("forceGraph").scrollHeight
-        let width = document.getElementById("forceGraph").scrollWidth
-        let gData = this.crossLinkObject(this.jsonData)
-        // let gData = this.crossLinkObject(gdot)
+      const g = {
+        nodes: [
+          {
+            "key": "1",
+            "attributes": {
+              "label": "1",
+              "modularity_class": 1,
+              "MemoryObject": "null",
+              "Offset": "null"
+            }
+          },
+          {
+            "key": "2",
+            "attributes": {
+              "label": "2",
+              "modularity_class": 2,
+              "MemoryObject": "null",
+              "Offset": "null"
+            }
+          },
+          {
+            "key": "3",
+            "attributes": {
+              "label": "3",
+              "modularity_class": 3,
+              "MemoryObject": "null",
+              "Offset": "null"
+            }
+          }
+        ],
+        links: [
+          {
+            "key": "1",
+            "source": "1",
+            "target": "2",
+          }
+        ]
+      }
 
-        this.graph = ForceGraph3D()
-          (document.getElementById("forceGraphHolder"))
-          .backgroundColor("#010011")
-          .graphData(gData)
-          .width(width)
-          .height(height)
-          .nodeId("key")
-          .nodeLabel(node => node.attributes.label)
-          .nodeRelSize(NODE_R)
-          .nodeAutoColorBy(node => node.attributes.modularity_class)
-          .nodeThreeObject(node => node === this.hoverNode && node.attributes.MemoryObject !== "null"
-            ? new THREE.Mesh(         // Memory object on hover
+      // this.getJson().then(() => {
+      this.highlightNodes = new Set()
+      this.highlightLinks = new Set()
+      this.hoverNode = null
+      let height = document.getElementById("forceGraph").scrollHeight
+      let width = document.getElementById("forceGraph").scrollWidth
+      // let gData = this.crossLinkObject(this.jsonData)
+      // let gData = this.crossLinkObject(gdot)
+      let gData = this.crossLinkObject(g)
+
+      this.graph = ForceGraph3D()
+        (document.getElementById("forceGraphHolder"))
+        .backgroundColor("#010011")
+        .graphData(gData)
+        .width(width)
+        .height(height)
+        .nodeId("key")
+        .nodeLabel(node => node.attributes.label)
+        .nodeRelSize(NODE_R)
+        .nodeAutoColorBy(node => node.attributes.modularity_class)
+        .nodeThreeObject(node => node === this.hoverNode && node.attributes.MemoryObject !== "null"
+          ? new THREE.Mesh(         // Memory object on hover
+            new THREE.BoxGeometry(15, 15, 15),
+            new THREE.MeshLambertMaterial({
+              color: node.color,
+              transparent: true,
+              // opacity: 0.75,
+              emissive: "#555555",
+            })
+          )
+          : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
+            ? new THREE.Mesh(       // Memory object neighbors
               new THREE.BoxGeometry(15, 15, 15),
               new THREE.MeshLambertMaterial({
                 color: node.color,
@@ -94,9 +144,9 @@ export default {
                 emissive: "#555555",
               })
             )
-            : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
-              ? new THREE.Mesh(       // Memory object neighbors
-                new THREE.BoxGeometry(15, 15, 15),
+            : node === this.hoverNode
+              ? new THREE.Mesh(     // node on hover
+                new THREE.SphereGeometry(6, 8, 8),
                 new THREE.MeshLambertMaterial({
                   color: node.color,
                   transparent: true,
@@ -104,52 +154,42 @@ export default {
                   emissive: "#555555",
                 })
               )
-              : node === this.hoverNode
-                ? new THREE.Mesh(     // node on hover
-                  new THREE.SphereGeometry(6, 8, 8),
+              : node.attributes.MemoryObject !== "null"
+                ? new THREE.Mesh(     // Memory object
+                  new THREE.BoxGeometry(15, 15, 15),
                   new THREE.MeshLambertMaterial({
                     color: node.color,
                     transparent: true,
                     // opacity: 0.75,
-                    emissive: "#555555",
+                    // emissive: "#a1a1a1",
                   })
                 )
-                : node.attributes.MemoryObject !== "null"
-                  ? new THREE.Mesh(     // Memory object
-                    new THREE.BoxGeometry(15, 15, 15),
+                : this.highlightNodes.has(node)
+                  ? new THREE.Mesh(     // node neighbors
+                    new THREE.SphereGeometry(6, 8, 8),
                     new THREE.MeshLambertMaterial({
                       color: node.color,
                       transparent: true,
                       // opacity: 0.75,
-                      // emissive: "#a1a1a1",
+                      emissive: "#555555",
                     })
                   )
-                  : this.highlightNodes.has(node)
-                    ? new THREE.Mesh(     // node neighbors
-                      new THREE.SphereGeometry(6, 8, 8),
-                      new THREE.MeshLambertMaterial({
-                        color: node.color,
-                        transparent: true,
-                        // opacity: 0.75,
-                        emissive: "#555555",
-                      })
-                    )
-                    : false
-          )
-          .linkSource("source")
-          .linkTarget("target")
-          .linkOpacity(0.25)
-          .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
-          .linkDirectionalParticleWidth(2)
-          .linkDirectionalParticleSpeed(0.005)
-          .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
-          .onNodeClick(node => { this.handleNodeClick(node) })
-          .onLinkClick(link => { this.handleLinkClick(link) })
-          .onNodeHover(node => { this.handleNodeHover(node) })
-          .onLinkHover(link => { this.handleLinkHover(link) })
-          .onBackgroundClick(() => { this.clickType = null })
-        this.loading = false
-      })
+                  : false
+        )
+        .linkSource("source")
+        .linkTarget("target")
+        .linkOpacity(0.25)
+        .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
+        .linkDirectionalParticleWidth(2)
+        .linkDirectionalParticleSpeed(0.005)
+        .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
+        .onNodeClick(node => { this.handleNodeClick(node) })
+        .onLinkClick(link => { this.handleLinkClick(link) })
+        .onNodeHover(node => { this.handleNodeHover(node) })
+        .onLinkHover(link => { this.handleLinkHover(link) })
+        .onBackgroundClick(() => { this.clickType = null })
+      this.loading = false
+      // })
     },
     crossLinkObject(json) {
       json.links.forEach((link) => {
@@ -174,8 +214,12 @@ export default {
       this.highlightLinks.clear()
       if (node) {
         this.highlightNodes.add(node)
-        node.neighbors.forEach(neighbor => this.highlightNodes.add(neighbor))
-        node.links.forEach(link => this.highlightLinks.add(link))
+        if (node.neighbors) {
+          node.neighbors.forEach(neighbor => this.highlightNodes.add(neighbor))
+        }
+        if (node.links) {
+          node.links.forEach(link => this.highlightLinks.add(link))
+        }
       }
 
       this.hoverNode = node || null
