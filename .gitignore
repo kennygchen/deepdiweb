@@ -23,3 +23,5 @@ selenium-debug.log
 
 /proxy/dist
 /proxy/node_modules
+/proxy/src/webportal/spec2006x86/decompiled
+/proxy/src/webportal/spec2006x86/O2_out

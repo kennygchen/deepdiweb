@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { get_function, add_function } from '../database';
+import { get_function, add_function, get_project } from '../database';
 import { exec, spawn } from "child_process";
 import { UploadedFile } from 'express-fileupload';
 import { CODE_DIFF_UPLOAD_DIR, UPLOAD_DIR } from '../config';
@@ -255,16 +255,27 @@ async function readFunctions(req: Request, res: Response) {
 
 async function getJsonFromBinary(req: Request, res: Response) {
     try {
-        let name = req.query.name as string;
-        console.log(name)
+        let short_name = req.query.shortName as string;
+        if (!short_name) {
+            res.status(400).send('Short name not provided');
+            return;
+        }
 
-        let bindir = `${rootDir}webportal/spec2006x86/O2/${name}`
+        const project = get_project(short_name)
+        if (!project) {
+            res.status(400).send(`${short_name} not found`);
+            return;
+        }
+
+        console.log('Creating JSON from project short name: ', short_name)
+
+        let bindir = project.file_path
         let outdir = `${rootDir}webportal/spec2006x86/O2_out`
         let ghidradir = `${rootDir}ghidra_10.2.2_PUBLIC`
         let scriptdir = `${rootDir}webportal/ghidra_scripts`
         let projdir = `${rootDir}webportal/ghidra`
         let decompdir = `${rootDir}webportal/spec2006x86/decompiled`
-        let command = `cd src/webportal/ && python run.py --name ${name} --bindir ${bindir} --outdir ${outdir} --ghidradir ${ghidradir} --scriptdir ${scriptdir} --projdir ${projdir} --decompdir ${decompdir}`
+        let command = `cd src/webportal/ && python run.py --short_name ${short_name} --bindir ${bindir} --outdir ${outdir} --ghidradir ${ghidradir} --scriptdir ${scriptdir} --projdir ${projdir} --decompdir ${decompdir}`
         exec(command,
             function (error, stdout, stderr) {
                 console.log('stdout: ' + stdout);
@@ -273,7 +284,7 @@ async function getJsonFromBinary(req: Request, res: Response) {
                     console.log('exec error: ' + error);
                 } else {
                     console.log("Finished processing all binaries.");
-                    const fileName: string = `${rootDir}webportal/spec2006x86/O2_out/${name}/${name}.json`
+                    const fileName: string = `${rootDir}webportal/spec2006x86/O2_out/${short_name}/${short_name}.json`
                     const content = readJsonFile(fileName);
                     res.status(200).json(content);
                 }

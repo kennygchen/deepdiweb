@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="forceGraphHolder" id="forceGraphHolder"></div>
-    <OverlayInfo class="overlay-container" :clickType="this.clickType" :clickedNodeKey="this.clickedNodeKey"
-      :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO" :clickedNodeOffset="this.clickedNodeOffset"
-      :clickedLinkKey="this.clickedLinkKey" :clickedLinkSource="this.clickedLinkSource"
-      :clickedLinkTarget="this.clickedLinkTarget" :clickedLinkWeight="this.clickedLinkWeight" />
+    <OverlayInfo class="overlay-container" :loading="this.loading" :clickType="this.clickType"
+      :clickedNodeKey="this.clickedNodeKey" :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO"
+      :clickedNodeOffset="this.clickedNodeOffset" :clickedLinkKey="this.clickedLinkKey"
+      :clickedLinkSource="this.clickedLinkSource" :clickedLinkTarget="this.clickedLinkTarget" />
     <Popup v-if="buttonTrigger" :TogglePopup="() => this.togglePopup()" :onNodeClick="setClickedNode"
       :onLinkClick="handleLinkClick" :crossLinkObject="crossLinkObject" :node="popupNode" />
   </div>
@@ -42,8 +42,9 @@ export default {
       clickedLinkKey: null,
       clickedLinkSource: null,
       clickedLinkTarget: null,
-      clickedLinkWeight: null,
+      // clickedLinkWeight: null,
       buttonTrigger: false,
+      loading: true
     }
   },
   mounted() {
@@ -52,47 +53,39 @@ export default {
   methods: {
     async getJson() {
       try {
-        this.jsonData = await getJsonFromBinary("bzip2")
+        let shortName = this.$store.state.shortName
+        this.jsonData = await getJsonFromBinary(shortName)
       } catch (e) {
         console.error("Error get JSON from binary:", e)
+        this.loading = false
+        this.clickType = 'error'
       }
     },
     initializeGraph() {
+      // this.loading = true
       const NODE_R = 6
 
-      this.highlightNodes = new Set()
-      this.highlightLinks = new Set()
-      this.hoverNode = null
+      this.getJson().then(() => {
+        this.highlightNodes = new Set()
+        this.highlightLinks = new Set()
+        this.hoverNode = null
+        let height = document.getElementById("forceGraph").scrollHeight
+        let width = document.getElementById("forceGraph").scrollWidth
+        let gData = this.crossLinkObject(this.jsonData)
+        // let gData = this.crossLinkObject(gdot)
 
-      let height = document.getElementById("forceGraph").scrollHeight
-      let width = document.getElementById("forceGraph").scrollWidth
-
-      // this.getJson().then(() => { })
-      // let gData = this.crossLinkObject(this.jsonData)
-      let gData = this.crossLinkObject(gdot)
-
-      this.graph = ForceGraph3D()
-        (document.getElementById("forceGraphHolder"))
-        .backgroundColor("#010011")
-        .graphData(gData)
-        .width(width)
-        .height(height)
-        .nodeId("key")
-        .nodeLabel(node => node.attributes.label)
-        .nodeRelSize(NODE_R)
-        .nodeAutoColorBy(node => node.attributes.modularity_class)
-        .nodeThreeObject(node => node === this.hoverNode && node.attributes.MemoryObject !== "null"
-          ? new THREE.Mesh(         // Memory object on hover
-            new THREE.BoxGeometry(15, 15, 15),
-            new THREE.MeshLambertMaterial({
-              color: node.color,
-              transparent: true,
-              // opacity: 0.75,
-              emissive: "#555555",
-            })
-          )
-          : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
-            ? new THREE.Mesh(       // Memory object neighbors
+        this.graph = ForceGraph3D()
+          (document.getElementById("forceGraphHolder"))
+          .backgroundColor("#010011")
+          .graphData(gData)
+          .width(width)
+          .height(height)
+          .nodeId("key")
+          .nodeLabel(node => node.attributes.label)
+          .nodeRelSize(NODE_R)
+          .nodeAutoColorBy(node => node.attributes.modularity_class)
+          .nodeThreeObject(node => node === this.hoverNode && node.attributes.MemoryObject !== "null"
+            ? new THREE.Mesh(         // Memory object on hover
               new THREE.BoxGeometry(15, 15, 15),
               new THREE.MeshLambertMaterial({
                 color: node.color,
@@ -101,9 +94,9 @@ export default {
                 emissive: "#555555",
               })
             )
-            : node === this.hoverNode
-              ? new THREE.Mesh(     // node on hover
-                new THREE.SphereGeometry(6, 8, 8),
+            : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
+              ? new THREE.Mesh(       // Memory object neighbors
+                new THREE.BoxGeometry(15, 15, 15),
                 new THREE.MeshLambertMaterial({
                   color: node.color,
                   transparent: true,
@@ -111,40 +104,52 @@ export default {
                   emissive: "#555555",
                 })
               )
-              : node.attributes.MemoryObject !== "null"
-                ? new THREE.Mesh(     // Memory object
-                  new THREE.BoxGeometry(15, 15, 15),
+              : node === this.hoverNode
+                ? new THREE.Mesh(     // node on hover
+                  new THREE.SphereGeometry(6, 8, 8),
                   new THREE.MeshLambertMaterial({
                     color: node.color,
                     transparent: true,
                     // opacity: 0.75,
-                    // emissive: "#a1a1a1",
+                    emissive: "#555555",
                   })
                 )
-                : this.highlightNodes.has(node)
-                  ? new THREE.Mesh(     // node neighbors
-                    new THREE.SphereGeometry(6, 8, 8),
+                : node.attributes.MemoryObject !== "null"
+                  ? new THREE.Mesh(     // Memory object
+                    new THREE.BoxGeometry(15, 15, 15),
                     new THREE.MeshLambertMaterial({
                       color: node.color,
                       transparent: true,
                       // opacity: 0.75,
-                      emissive: "#555555",
+                      // emissive: "#a1a1a1",
                     })
                   )
-                  : false
-        )
-        .linkSource("source")
-        .linkTarget("target")
-        .linkOpacity(0.25)
-        .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
-        .linkDirectionalParticleWidth(2)
-        .linkDirectionalParticleSpeed(0.005)
-        .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
-        .onNodeClick(node => { this.handleNodeClick(node) })
-        .onLinkClick(link => { this.handleLinkClick(link) })
-        .onNodeHover(node => { this.handleNodeHover(node) })
-        .onLinkHover(link => { this.handleLinkHover(link) })
-        .onBackgroundClick(() => { this.clickType = null })
+                  : this.highlightNodes.has(node)
+                    ? new THREE.Mesh(     // node neighbors
+                      new THREE.SphereGeometry(6, 8, 8),
+                      new THREE.MeshLambertMaterial({
+                        color: node.color,
+                        transparent: true,
+                        // opacity: 0.75,
+                        emissive: "#555555",
+                      })
+                    )
+                    : false
+          )
+          .linkSource("source")
+          .linkTarget("target")
+          .linkOpacity(0.25)
+          .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
+          .linkDirectionalParticleWidth(2)
+          .linkDirectionalParticleSpeed(0.005)
+          .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
+          .onNodeClick(node => { this.handleNodeClick(node) })
+          .onLinkClick(link => { this.handleLinkClick(link) })
+          .onNodeHover(node => { this.handleNodeHover(node) })
+          .onLinkHover(link => { this.handleLinkHover(link) })
+          .onBackgroundClick(() => { this.clickType = null })
+        this.loading = false
+      })
     },
     crossLinkObject(json) {
       json.links.forEach((link) => {
@@ -208,7 +213,7 @@ export default {
       this.clickedLinkKey = link.key
       this.clickedLinkSource = link.source.key
       this.clickedLinkTarget = link.target.key
-      this.clickedLinkWeight = link.attributes.weight
+      // this.clickedLinkWeight = link.attributes.weight
     },
     rerenderGraph() {
       this.graph

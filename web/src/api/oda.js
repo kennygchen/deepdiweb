@@ -508,11 +508,11 @@ export async function getJsonContent () {
   }
 }
 
-export async function getJsonFromBinary (binaryName) {
+export async function getJsonFromBinary (shortName) {
   try {
     const response = await odaAxios.get('/odaweb/api/getJsonFromBinary/', {
       params: {
-        name: binaryName
+        shortName: shortName
       }
     })
     console.log('call getJsonFromBinary')

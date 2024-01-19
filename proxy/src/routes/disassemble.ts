@@ -31,7 +31,7 @@ export default async function disassemble(req: Request, res: Response) {
             //     console.log('Hex value:', hex);
             //     return hex;
             // }).join(' ');
-        
+
             form.append('bytes', byte_string);
             form.append('arch', project.arch ?? '');
             form.append('mode', project.mode ?? '');
@@ -39,7 +39,7 @@ export default async function disassemble(req: Request, res: Response) {
             const blob = new Blob([bytes]);
             form.append('file', blob, 'filename');
         }
-        
+
         // const resp = await axios.post(DEEPDI_URL,
         //     form.getBuffer(),
         //     {

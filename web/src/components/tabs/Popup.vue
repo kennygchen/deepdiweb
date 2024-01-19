@@ -13,6 +13,7 @@ import gdot from "./gdot.json"
 import * as THREE from "three"
 
 export default {
+    name: 'Popup',
     props: ['TogglePopup', 'onNodeClick', 'onLinkClick', 'node'],
     data() {
         return {
@@ -168,7 +169,6 @@ export default {
             }
         },
         generateSubgraph(node) {
-            console.log(node)
             const subgraph = {
                 nodes: [],
                 links: []
@@ -209,9 +209,6 @@ export default {
                     source: link.source.key,
                     target: link.target.key,
                     color: link.color,
-                    attributes: {
-                        weight: link.attributes.weight,
-                    },
                 };
                 subgraph.links.push(linkCopy);
             }
