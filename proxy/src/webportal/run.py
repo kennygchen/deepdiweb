@@ -5,6 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 def decompile(short_name, bindir, outdir, ghidradir, scriptdir, projdir, decompdir):
     os.makedirs(decompdir, exist_ok=True)
+    os.makedirs(projdir, exist_ok=True)
     os.system(f"cp {scriptdir}/json-simple-1.1.1.jar  {ghidradir}/Ghidra/patch/")
     binaries = [short_name]
     for binary in binaries:
