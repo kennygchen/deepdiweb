@@ -11,7 +11,8 @@ def decompile(short_name, bindir, outdir, ghidradir, scriptdir, projdir, decompd
         start_time = time.time()
         os.makedirs(f"{outdir}/{binary}", exist_ok=True)
         os.chdir(scriptdir)
-        ghidra_cmd = ghidradir + "/support/analyzeHeadless " + projdir + " utils -import " + bindir + " -processor " + "x86:LE:32:default " + " -deleteProject -overwrite -scriptPath " + scriptdir + " -postScript IndirectCallTargetResolving.java -preScript SetAutoAnalysisOptions.java"
+        ghidra_cmd = ghidradir + "/support/analyzeHeadless " + projdir + " utils -import " + bindir + " -deleteProject -overwrite -scriptPath " + scriptdir + " -postScript IndirectCallTargetResolving.java -preScript SetAutoAnalysisOptions.java"
+        # ghidra_cmd = ghidradir + "/support/analyzeHeadless " + projdir + " utils -import " + bindir + " -processor " + "x86:LE:32:default " + " -deleteProject -overwrite -scriptPath " + scriptdir + " -postScript IndirectCallTargetResolving.java -preScript SetAutoAnalysisOptions.java"
         os.system(ghidra_cmd)
         end_time = time.time()
         

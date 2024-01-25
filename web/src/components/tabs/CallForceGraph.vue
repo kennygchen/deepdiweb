@@ -44,7 +44,7 @@ export default {
       clickedLinkTarget: null,
       // clickedLinkWeight: null,
       buttonTrigger: false,
-      loading: true
+      loading: true,
     }
   },
   mounted() {

@@ -282,6 +282,7 @@ async function getJsonFromBinary(req: Request, res: Response) {
                 console.log('stderr: ' + stderr);
                 if (error !== null) {
                     console.log('exec error: ' + error);
+                    res.status(400).send('An error occured while trying to process the binary: ' + error);
                 } else {
                     console.log("Finished processing all binaries.");
                     const fileName: string = `${rootDir}webportal/spec2006x86/O2_out/${short_name}/${short_name}.json`

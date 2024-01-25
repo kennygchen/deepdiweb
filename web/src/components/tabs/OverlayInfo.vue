@@ -18,7 +18,7 @@
         <div><b>Weight: </b>{{ clickedLinkWeight }}</div>
     </div>
     <div v-else-if="clickType == 'error'">
-        <div><b>Error</b></div>
+        <div><b>API Error</b></div>
     </div>
 </template>
 
