@@ -3,7 +3,8 @@
         Generating call graph. Depending on the size of the binary, this could take 30 seconds to a minutes.
     </div>
     <div v-else-if="clickType == null">
-        <div><b>Left-click: </b>view node/link info</div>
+        <div><b>Left-click: </b>View node/link info</div>
+        <div><b>Right-click: </b>Focus and highlight a node</div>
     </div>
     <div v-else-if="clickType == 'node'">
         <div><b>Key: </b>{{ clickedNodeKey }}</div>
