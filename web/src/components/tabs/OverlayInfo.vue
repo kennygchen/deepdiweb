@@ -1,5 +1,5 @@
 <template>
-    <div v-if="loading">
+    <div v-if="!graphLoaded && !clickType">
         Generating call graph. Depending on the size of the binary, this could take 30 seconds to a minutes.
     </div>
     <div v-else-if="clickType == null">
@@ -18,7 +18,10 @@
         <div><b>Target: </b>{{ clickedLinkTarget }}</div>
         <div><b>Weight: </b>{{ clickedLinkWeight }}</div>
     </div>
-    <div v-else-if="clickType == 'error'">
+    <div v-else-if="clickType == 'notFound'">
+        <div>No function match you search.</div>
+    </div>
+    <div v-else-if="!graphLoaded && clickType == 'error'">
         <div><b>API Error</b></div>
     </div>
 </template>
@@ -26,7 +29,7 @@
 <script>
 export default {
     name: 'OverlayInfo',
-    props: ['loading', 'clickType', 'clickedNodeKey', 'clickedNodeMC', 'clickedNodeMO', 'clickedNodeOffset', 'clickedLinkKey', 'clickedLinkSource', 'clickedLinkTarget', 'clickedLinkWeight'],
+    props: ['graphLoaded', 'clickType', 'clickedNodeKey', 'clickedNodeMC', 'clickedNodeMO', 'clickedNodeOffset', 'clickedLinkKey', 'clickedLinkSource', 'clickedLinkTarget', 'clickedLinkWeight'],
 }
 </script>
 

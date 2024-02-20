@@ -1,12 +1,14 @@
 <template>
   <div>
     <div class="forceGraphHolder" id="forceGraphHolder"></div>
-    <OverlayInfo class="overlay-container" :loading="this.loading" :clickType="this.clickType"
+    <OverlayInfo class="overlay-container" :graphLoaded="this.graphLoaded" :clickType="this.clickType"
       :clickedNodeKey="this.clickedNodeKey" :clickedNodeMC="this.clickedNodeMC" :clickedNodeMO="this.clickedNodeMO"
       :clickedNodeOffset="this.clickedNodeOffset" :clickedLinkKey="this.clickedLinkKey"
       :clickedLinkSource="this.clickedLinkSource" :clickedLinkTarget="this.clickedLinkTarget" />
     <Popup v-if="buttonTrigger" :TogglePopup="() => this.togglePopup()" :onNodeClick="setClickedNode"
       :onLinkClick="handleLinkClick" :crossLinkObject="crossLinkObject" :node="popupNode" />
+    <SearchBox class="search-container" @changeSelectedNode="changeSelectedNode($event)"
+      :functionNameList="this.functionNameList" :graphLoaded="this.graphLoaded" />
   </div>
 </template>
 
@@ -16,6 +18,7 @@ import gdot from "./gdot.json"
 import * as THREE from "three"
 import OverlayInfo from './OverlayInfo.vue'
 import Popup from './Popup.vue'
+import SearchBox from './SearchBox.vue'
 import { getJsonFromBinary } from '../../api/oda'
 import { ref } from 'vue'
 
@@ -29,8 +32,9 @@ export default {
     }
   },
   components: {
-    OverlayInfo: () => import('./OverlayInfo.vue'),
-    Popup: () => import('./Popup.vue'),
+    OverlayInfo,
+    Popup,
+    SearchBox,
   },
   data() {
     return {
@@ -44,7 +48,8 @@ export default {
       clickedLinkTarget: null,
       // clickedLinkWeight: null,
       buttonTrigger: false,
-      loading: true,
+      graphLoaded: false,
+      functionNameList: [],
     }
   },
   mounted() {
@@ -57,12 +62,12 @@ export default {
         this.jsonData = await getJsonFromBinary(shortName)
       } catch (e) {
         console.error("Error get JSON from binary:", e)
-        this.loading = false
+        this.graphLoaded = false
         this.clickType = 'error'
       }
     },
     initializeGraph() {
-      // this.loading = true
+      // this.graphLoaded = true
       const NODE_R = 6
 
       this.getJson().then(() => {
@@ -72,12 +77,13 @@ export default {
         this.selectedNode = null
         let height = document.getElementById("forceGraph").scrollHeight
         let width = document.getElementById("forceGraph").scrollWidth
-        let gData = this.crossLinkObject(this.jsonData)
+        this.gData = this.crossLinkObject(this.jsonData)
+        // this.gData = this.crossLinkObject(gdot)
 
         this.graph = ForceGraph3D()
           (document.getElementById("forceGraphHolder"))
           .backgroundColor("#010011")
-          .graphData(gData)
+          .graphData(this.gData)
           .width(width)
           .height(height)
           .nodeId("key")
@@ -169,14 +175,20 @@ export default {
           .onNodeHover(node => { this.handleNodeHover(node) })
           .onLinkHover(link => { this.handleLinkHover(link) })
           .onBackgroundClick(() => { this.clickType = null })
-          .onBackgroundRightClick(() => {
+          .onBackgroundClick(() => {
+            this.clickType = null
             this.selectedNode = null
             this.rerenderGraph()
           })
-        this.loading = false
+        this.graphLoaded = true
       })
     },
     crossLinkObject(json) {
+      this.functionNameList = []
+      json.nodes.forEach((node) => {
+        this.functionNameList.push(node.key)
+      })
+      // console.log(this.functionNameList)
       json.links.forEach((link) => {
         const source = json.nodes.find((node) => node.key === link.source)
         const target = json.nodes.find((node) => node.key === link.target)
@@ -233,7 +245,7 @@ export default {
       }
     },
     setClickedNode(node) {
-      console.log(node)
+      // console.log(node)
       this.clickedNodeKey = node.key
       this.clickedNodeMC = node.attributes.modularity_class
       this.clickedNodeMO = node.attributes.MemoryObject
@@ -278,6 +290,15 @@ export default {
       } else {
         this.graph.resumeAnimation()
       }
+    },
+    changeSelectedNode(input) {
+      let node = this.gData.nodes.filter((node) => node.key == input)[0]
+      if (node) {
+        this.handleNodeRightClick(node)
+        this.rerenderGraph()
+      } else {
+        this.clickType = 'notFound'
+      }
     }
   }
 }
@@ -302,6 +323,14 @@ export default {
   border: 1px solid white;
   color: white;
   opacity: 70%;
+  z-index: 99;
+}
+
+.search-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 10px;
   z-index: 99;
 }
 </style>
