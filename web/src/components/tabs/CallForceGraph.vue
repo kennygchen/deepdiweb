@@ -261,7 +261,6 @@ export default {
     handleNodeRightClick(node, event) {
       if (event.ctrlKey) {
         this.selectedNodes.has(node) ? this.selectedNodes.delete(node) : this.selectedNodes.add(node);
-        console.log(this.selectedNodes)
       } else {
         // const untoggle = this.selectedNodes.has(node) && this.selectedNodes.size === 1;
         this.selectedNodes.clear();
