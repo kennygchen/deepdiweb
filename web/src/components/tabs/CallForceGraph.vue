@@ -175,7 +175,7 @@ export default {
           .onNodeHover(node => { this.handleNodeHover(node) })
           .onLinkHover(link => { this.handleLinkHover(link) })
           .onBackgroundClick(() => { this.clickType = null })
-          .onBackgroundClick(() => {
+          .onBackgroundRightClick(() => {
             this.clickType = null
             this.selectedNodes = new Set()
             this.rerenderGraph()
@@ -331,7 +331,6 @@ export default {
   background: black;
   border: 1px solid white;
   color: white;
-  opacity: 70%;
   z-index: 99;
 }
 
