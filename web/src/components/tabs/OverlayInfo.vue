@@ -5,6 +5,7 @@
     <div v-else-if="clickType == null">
         <div><b>Left-click: </b>View node/link info</div>
         <div><b>Right-click: </b>Focus and highlight a node</div>
+        <div><b>Ctrl + Right-click: </b>Select and highlight multiple nodes</div>
     </div>
     <div v-else-if="clickType == 'node'">
         <div><b>Key: </b>{{ clickedNodeKey }}</div>
