@@ -70,39 +70,29 @@ export default {
       // this.graphLoaded = true
       const NODE_R = 6
 
-      // this.getJson().then(() => {
-      this.highlightNodes = new Set()
-      this.highlightLinks = new Set()
-      this.hoverNode = null
-      this.selectedNodes = new Set()
-      let height = document.getElementById("forceGraph").scrollHeight
-      let width = document.getElementById("forceGraph").scrollWidth
-      // this.gData = this.crossLinkObject(this.jsonData)
-      this.gData = this.crossLinkObject(gdot)
+      this.getJson().then(() => {
+        this.highlightNodes = new Set()
+        this.highlightLinks = new Set()
+        this.hoverNode = null
+        this.selectedNodes = new Set()
+        let height = document.getElementById("forceGraph").scrollHeight
+        let width = document.getElementById("forceGraph").scrollWidth
+        this.gData = this.crossLinkObject(this.jsonData)
+        // this.gData = this.crossLinkObject(gdot)
 
-      this.graph = ForceGraph3D()
-        (document.getElementById("forceGraphHolder"))
-        .backgroundColor("#010011")
-        .graphData(this.gData)
-        .width(width)
-        .height(height)
-        .nodeId("key")
-        .nodeLabel(node => node.attributes.label)
-        .nodeRelSize(NODE_R)
-        .nodeAutoColorBy(node => node.attributes.modularity_class)
-        .nodeThreeObject(node => this.selectedNodes.has(node) && node.attributes.MemoryObject !== "null"
-          ? new THREE.Mesh(             // Memory object selected
-            new THREE.BoxGeometry(15, 15, 15),
-            new THREE.MeshLambertMaterial({
-              color: "#FFFF00",
-              transparent: true,
-              // opacity: 0.75,
-              emissive: "#555555",
-            })
-          )
-          : this.selectedNodes.has(node)
-            ? new THREE.Mesh(           // Node selected
-              new THREE.SphereGeometry(6, 8, 8),
+        this.graph = ForceGraph3D()
+          (document.getElementById("forceGraphHolder"))
+          .backgroundColor("#010011")
+          .graphData(this.gData)
+          .width(width)
+          .height(height)
+          .nodeId("key")
+          .nodeLabel(node => node.attributes.label)
+          .nodeRelSize(NODE_R)
+          .nodeAutoColorBy(node => node.attributes.modularity_class)
+          .nodeThreeObject(node => this.selectedNodes.has(node) && node.attributes.MemoryObject !== "null"
+            ? new THREE.Mesh(             // Memory object selected
+              new THREE.BoxGeometry(15, 15, 15),
               new THREE.MeshLambertMaterial({
                 color: "#FFFF00",
                 transparent: true,
@@ -110,18 +100,18 @@ export default {
                 emissive: "#555555",
               })
             )
-            : node === this.hoverNode && node.attributes.MemoryObject !== "null"
-              ? new THREE.Mesh(         // Memory object on hover
-                new THREE.BoxGeometry(15, 15, 15),
+            : this.selectedNodes.has(node)
+              ? new THREE.Mesh(           // Node selected
+                new THREE.SphereGeometry(6, 8, 8),
                 new THREE.MeshLambertMaterial({
-                  color: node.color,
+                  color: "#FFFF00",
                   transparent: true,
                   // opacity: 0.75,
                   emissive: "#555555",
                 })
               )
-              : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
-                ? new THREE.Mesh(       // Memory object neighbors
+              : node === this.hoverNode && node.attributes.MemoryObject !== "null"
+                ? new THREE.Mesh(         // Memory object on hover
                   new THREE.BoxGeometry(15, 15, 15),
                   new THREE.MeshLambertMaterial({
                     color: node.color,
@@ -130,9 +120,9 @@ export default {
                     emissive: "#555555",
                   })
                 )
-                : node === this.hoverNode
-                  ? new THREE.Mesh(     // node on hover
-                    new THREE.SphereGeometry(6, 8, 8),
+                : this.highlightNodes.has(node) && node.attributes.MemoryObject !== "null"
+                  ? new THREE.Mesh(       // Memory object neighbors
+                    new THREE.BoxGeometry(15, 15, 15),
                     new THREE.MeshLambertMaterial({
                       color: node.color,
                       transparent: true,
@@ -140,48 +130,58 @@ export default {
                       emissive: "#555555",
                     })
                   )
-                  : node.attributes.MemoryObject !== "null"
-                    ? new THREE.Mesh(     // Memory object
-                      new THREE.BoxGeometry(15, 15, 15),
+                  : node === this.hoverNode
+                    ? new THREE.Mesh(     // node on hover
+                      new THREE.SphereGeometry(6, 8, 8),
                       new THREE.MeshLambertMaterial({
                         color: node.color,
                         transparent: true,
                         // opacity: 0.75,
-                        // emissive: "#a1a1a1",
+                        emissive: "#555555",
                       })
                     )
-                    : this.highlightNodes.has(node)
-                      ? new THREE.Mesh(     // node neighbors
-                        new THREE.SphereGeometry(6, 8, 8),
+                    : node.attributes.MemoryObject !== "null"
+                      ? new THREE.Mesh(     // Memory object
+                        new THREE.BoxGeometry(15, 15, 15),
                         new THREE.MeshLambertMaterial({
                           color: node.color,
                           transparent: true,
                           // opacity: 0.75,
-                          emissive: "#555555",
+                          // emissive: "#a1a1a1",
                         })
                       )
-                      : false
-        )
-        .linkSource("source")
-        .linkTarget("target")
-        .linkOpacity(0.25)
-        .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
-        .linkDirectionalParticleWidth(2)
-        .linkDirectionalParticleSpeed(0.005)
-        .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
-        .onNodeClick(node => { this.handleNodeClick(node) })
-        .onLinkClick(link => { this.handleLinkClick(link) })
-        .onNodeRightClick((node, event) => { this.handleNodeRightClick(node, event) })
-        .onNodeHover(node => { this.handleNodeHover(node) })
-        .onLinkHover(link => { this.handleLinkHover(link) })
-        .onBackgroundClick(() => { this.clickType = null })
-        .onBackgroundClick(() => {
-          this.clickType = null
-          this.selectedNodes = new Set()
-          this.rerenderGraph()
-        })
-      this.graphLoaded = true
-      // })
+                      : this.highlightNodes.has(node)
+                        ? new THREE.Mesh(     // node neighbors
+                          new THREE.SphereGeometry(6, 8, 8),
+                          new THREE.MeshLambertMaterial({
+                            color: node.color,
+                            transparent: true,
+                            // opacity: 0.75,
+                            emissive: "#555555",
+                          })
+                        )
+                        : false
+          )
+          .linkSource("source")
+          .linkTarget("target")
+          .linkOpacity(0.25)
+          .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 4 : 0)
+          .linkDirectionalParticleWidth(2)
+          .linkDirectionalParticleSpeed(0.005)
+          .linkWidth(link => this.highlightLinks.has(link) ? 4 : 1.5)
+          .onNodeClick(node => { this.handleNodeClick(node) })
+          .onLinkClick(link => { this.handleLinkClick(link) })
+          .onNodeRightClick((node, event) => { this.handleNodeRightClick(node, event) })
+          .onNodeHover(node => { this.handleNodeHover(node) })
+          .onLinkHover(link => { this.handleLinkHover(link) })
+          .onBackgroundClick(() => { this.clickType = null })
+          .onBackgroundClick(() => {
+            this.clickType = null
+            this.selectedNodes = new Set()
+            this.rerenderGraph()
+          })
+        this.graphLoaded = true
+      })
     },
     crossLinkObject(json) {
       this.functionNameList = []
